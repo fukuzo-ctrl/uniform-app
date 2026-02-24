@@ -1,6 +1,6 @@
 function doGet(e) {
   var template = HtmlService.createTemplateFromFile('index');
-  template.isAdmin = false; // 初期状態は一般
+  template.isAdmin = false;
   return template.evaluate()
     .setTitle('UNIFORM BUILDER')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1')
@@ -28,14 +28,18 @@ function getDesignLibraryBySport(s) {
   return lib;
 }
 
+// 全ての管理者設定（位置・サイズ含む）を保存
 function saveSportSettings(d) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName('システム設定') || ss.insertSheet('システム設定');
-  if (sheet.getLastRow() === 0) sheet.appendRow(['競技', 'Scale', 'bgUrl']);
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(['競技', 'Scale', 'bgUrl', 'n_size', 'n_x', 'n_y', 'm_size', 'm_x', 'm_y']);
+  }
   var rows = sheet.getDataRange().getValues(), f = -1;
   for (var i = 1; i < rows.length; i++) { if (rows[i][0] === d.sportName) { f = i + 1; break; } }
-  if (f !== -1) sheet.getRange(f, 1, 1, 3).setValues([[d.sportName, d.scale, d.bgUrl]]);
-  else sheet.appendRow([d.sportName, d.scale, d.bgUrl]);
+  var row = [d.sportName, d.scale, d.bgUrl, d.n_size, d.n_x, d.n_y, d.m_size, d.m_x, d.m_y];
+  if (f !== -1) sheet.getRange(f, 1, 1, 9).setValues([row]);
+  else sheet.appendRow(row);
   return "設定を保存しました";
 }
 
@@ -43,7 +47,13 @@ function getSportSettings() {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('システム設定');
   if (!sheet) return {};
   var data = sheet.getDataRange().getValues(), s = {};
-  for (var i = 1; i < data.length; i++) s[data[i][0]] = { scale: data[i][1], bgUrl: data[i][2] };
+  for (var i = 1; i < data.length; i++) {
+    s[data[i][0]] = { 
+      scale: data[i][1], bgUrl: data[i][2], 
+      n_size: data[i][3], n_x: data[i][4], n_y: data[i][5],
+      m_size: data[i][6], m_x: data[i][7], m_y: data[i][8]
+    };
+  }
   return s;
 }
 

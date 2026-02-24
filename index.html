@@ -4,30 +4,241 @@
     <meta charset="UTF-8">
     <style>
         :root { --sidebar-w: 350px; --accent: #00738D; }
-        body { margin: 0; background: #333; font-family: sans-serif; overflow: hidden; height: 100vh; }
+        body { margin: 0; background: #333; font-family: 'Helvetica Neue', Arial, sans-serif; overflow: hidden; height: 100vh; }
         .screen { position: fixed; top:0; left:0; width:100%; height:100%; display:none; flex-direction: column; align-items: center; justify-content: center; }
         
-        /* 45%グレーのかっこいい背景 */
-        .preview { flex-grow: 1; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #777777 0%, #444444 100%); position: relative; }
+        /* スタート画面 */
+        #start-screen { display: flex; background: linear-gradient(135deg, #00738D 0%, #004d5e 100%); color: #fff; z-index: 1000; }
+        .sport-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; width: 90%; max-width: 500px; }
+        .sport-card { background: #fff; color: #333; padding: 30px; border-radius: 15px; text-align: center; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .sport-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+
+        /* カタログ画面 */
+        #catalog-screen { background: #f0f0f2; z-index: 500; overflow-y: auto; align-items: center; justify-content: flex-start; padding-top: 50px; }
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; width: 90%; }
+        .design-card { background: #fff; border-radius: 12px; padding: 15px; text-align: center; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .thumb-box svg { width: 150px; height: 150px; }
+
+        /* メインアプリ */
+        #main-app { width: 100%; height: 100vh; display: none; flex-direction: row; }
+        .sidebar { width: var(--sidebar-w); background: #fff; border-right: 1px solid #ccc; padding: 15px; box-sizing: border-box; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; z-index: 100; }
         
-        /* 3D白いジャージ土台 (364-[更新済み].png) */
+        /* 45%グレーのプレビュー背景 */
+        .preview { flex-grow: 1; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #777777 0%, #444444 100%); position: relative; overflow: auto; }
+        
+        /* 3D白いジャージ土台レイヤー */
         #svg-canvas { 
-            display: flex; align-items: center; justify-content: center; position: relative; width: 600px; height: 600px;
+            display: flex; align-items: center; justify-content: center; position: relative; width: 650px; height: 650px;
             background-image: url("https://drive.google.com/uc?export=view&id=1X1p9P-9uR-u_K9yX9P-9uR-u_K9yX9P"); 
             background-size: contain; background-repeat: no-repeat; background-position: center;
         }
-        svg { width: 100%; height: 100%; mix-blend-mode: multiply; filter: drop-shadow(0 15px 35px rgba(0,0,0,0.3)); }
+        svg { width: 100% !important; height: 100% !important; mix-blend-mode: multiply; filter: drop-shadow(0 15px 40px rgba(0,0,0,0.4)); }
+
+        /* カラーピッカー関連 */
+        .group { background: #f9f9f9; padding: 10px; border: 1px solid #eee; border-radius: 8px; }
+        .label-row { display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; color: #444; margin-bottom: 5px; align-items: center; }
+        .color-name-display { font-size: 10px; color: var(--accent); margin-right: 10px; }
+        .swatch { width: 40px; height: 25px; border: 2px solid #ddd; border-radius: 4px; cursor: pointer; }
+        .popover { position: fixed; left: 360px; top: 50%; transform: translateY(-50%); width: 220px; background: #fff; border: 1px solid #ccc; box-shadow: 0 10px 25px rgba(0,0,0,0.2); padding: 10px; display: none; z-index: 1000; border-radius: 10px; }
+        .color-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; }
+        .chip { width: 100%; aspect-ratio: 1; border-radius: 3px; cursor: pointer; border: 1px solid #eee; }
         
-        .sidebar { width: var(--sidebar-w); background: #fff; padding: 15px; border-right: 1px solid #ccc; overflow-y: auto; }
-        .color-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; padding: 10px; }
-        .chip { width: 100%; aspect-ratio: 1; border-radius: 2px; cursor: pointer; border: 1px solid #eee; }
-        .btn-save { background: var(--accent); color: #fff; border: none; padding: 12px; border-radius: 5px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
+        input[type="text"], select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; margin-top: 5px; }
+        .btn-save { background: var(--accent); color: #fff; border: none; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 15px; }
     </style>
 </head>
 <body onclick="hideAllPops()">
-    <div id="start-screen" class="screen" style="display:flex; background:var(--accent); color:#fff;">
-        <h1>UNIFORM BUILDER PRO</h1>
-        <button class="btn-save" style="width:200px; background:#fff; color:#333;" onclick="document.getElementById('start-screen').style.display='none'; openCatalog('サッカー')">スタート</button>
+
+    <div id="start-screen" class="screen">
+        <h1 style="letter-spacing: 3px; margin-bottom: 40px;">UNIFORM BUILDER PRO</h1>
+        <div class="sport-grid">
+            <div class="sport-card" onclick="openCatalog('サッカー')">⚽ SOCCER</div>
+            <div class="sport-card" onclick="openCatalog('野球')">⚾ BASEBALL</div>
+        </div>
     </div>
-    </body>
+
+    <div id="catalog-screen" class="screen">
+        <button class="btn-save" style="width:120px; background:#666; margin-bottom:20px;" onclick="goBackToStart()">← BACK</button>
+        <div id="gallery-grid" class="gallery-grid"></div>
+    </div>
+
+    <div id="main-app" class="screen">
+        <aside class="sidebar" onclick="event.stopPropagation()">
+            <button class="btn-save" style="background:#666; margin:0;" onclick="goBackToCatalog()">← CATALOG</button>
+            <div class="group">
+                <label style="font-size:11px; font-weight:bold;">DESIGN / COLLAR</label>
+                <select id="design_select" onchange="updateCollarOptions()"></select>
+                <select id="collar_select" onchange="loadVariant()"></select>
+            </div>
+
+            <div class="group">
+                <label style="font-size:11px; font-weight:bold;">COLOR CUSTOM</label>
+                <div class="label-row">BODY <span id="txt_c0" class="color-name-display">サックス</span> <div class="swatch" id="sw_c0" onclick="togglePop('c0')"></div></div>
+                <div class="label-row">SLEEVE <span id="txt_c3" class="color-name-display">ライム</span> <div class="swatch" id="sw_c3" onclick="togglePop('c3')"></div></div>
+                <div class="label-row">COLLAR <span id="txt_c5" class="color-name-display">レッド</span> <div class="swatch" id="sw_c5" onclick="togglePop('c5')"></div></div>
+                <div class="label-row">LINE 1 <span id="txt_c1" class="color-name-display">ホワイト</span> <div class="swatch" id="sw_c1" onclick="togglePop('c1')"></div></div>
+            </div>
+
+            <div class="group">
+                <label style="font-size:11px; font-weight:bold;">TEXT / NUMBER</label>
+                <div class="label-row">COLOR <span id="txt_nc" class="color-name-display">ブラック</span> <div class="swatch" id="sw_nc" onclick="togglePop('nc')"></div></div>
+                <input type="text" id="v_num" placeholder="NUMBER" maxlength="3" oninput="apply()">
+                <input type="text" id="v_name" placeholder="NAME" oninput="apply()">
+            </div>
+
+            <button class="btn-save" onclick="saveOrder()">ORDER SUBMIT</button>
+        </aside>
+
+        <main class="preview"><div id="svg-canvas"></div></main>
+        
+        <div id="color-popover" class="popover" onclick="event.stopPropagation()">
+            <div id="color-grid" class="color-grid"></div>
+        </div>
+    </div>
+
+    <script>
+        // 厳選38色リスト
+        const COLORS = [
+            {n:"ブラック",c:"#000000"},{n:"ネイビー",c:"#000040"},{n:"Aネイビー",c:"#001a4d"},{n:"Lネイビー",c:"#1a3366"},{n:"Pネイビー",c:"#333399"},{n:"ゴールド",c:"#c5a059"},{n:"Rブルー",c:"#0047ab"},{n:"ブルー",c:"#0055a4"},{n:"サックス",c:"#41b6e6"},{n:"Lサックス",c:"#a5d7e8"},{n:"ターコイズ",c:"#00a39b"},{n:"マリンブルー",c:"#00839b"},{n:"ライム",c:"#b7d433"},{n:"シルバー",c:"#c0c0c0"},{n:"Dグレー",c:"#666666"},{n:"グレー",c:"#999999"},{n:"イエロー",c:"#ffdc00"},{n:"Lイエロー",c:"#fff352"},{n:"エンジ",c:"#6d1719"},{n:"Dグリーン",c:"#003324"},{n:"グリーン",c:"#00703c"},{n:"ケリーグリーン",c:"#009b48"},{n:"Dパープル",c:"#361f5b"},{n:"パープル",c:"#5d2d91"},{n:"Lパープル",c:"#b19cd9"},{n:"Mパープル",c:"#8b008b"},{n:"ブラウン",c:"#4e2a1e"},{n:"オレンジ",c:"#f36f21"},{n:"Mオレンジ",c:"#ff8200"},{n:"Lオレンジ",c:"#ff9e1b"},{n:"アイボリー",c:"#f5f5dc"},{n:"Dレッド",c:"#a50034"},{n:"レッド",c:"#e4002b"},{n:"ホットピンク",c:"#e4007f"},{n:"ピンク",c:"#f49ac2"},{n:"Lピンク",c:"#ffc0cb"},{n:"イエローG",c:"#ffcc00"},{n:"ホワイト",c:"#ffffff"}
+        ];
+
+        let curColors = { 
+            c0:{c:"#41b6e6",n:"サックス"}, c3:{c:"#b7d433",n:"ライム"}, c5:{c:"#e4002b",n:"レッド"}, c1:{c:"#ffffff",n:"ホワイト"}, nc:{c:"#000000",n:"ブラック"} 
+        };
+        let designLibrary = {}, activePart = null, currentSport = "";
+
+        // 初期化
+        window.onload = () => {
+            initColorPicker();
+            updateSwatches();
+        };
+
+        function initColorPicker() {
+            const grid = document.getElementById('color-grid');
+            COLORS.forEach(item => {
+                const chip = document.createElement('div');
+                chip.className = 'chip';
+                chip.style.backgroundColor = item.c;
+                chip.onclick = () => selectColor(item.c, item.n);
+                grid.appendChild(chip);
+            });
+        }
+
+        function togglePop(partId) {
+            activePart = partId;
+            const pop = document.getElementById('color-popover');
+            pop.style.display = 'block';
+            // スウォッチの近くに表示（簡易版）
+        }
+
+        function hideAllPops() { document.getElementById('color-popover').style.display = 'none'; }
+
+        function selectColor(hex, name) {
+            curColors[activePart] = {c:hex, n:name};
+            updateSwatches();
+            apply();
+            hideAllPops();
+        }
+
+        function updateSwatches() {
+            for(let id in curColors) {
+                const sw = document.getElementById("sw_" + id);
+                const txt = document.getElementById("txt_" + id);
+                if(sw) sw.style.backgroundColor = curColors[id].c;
+                if(txt) txt.textContent = curColors[id].n;
+            }
+        }
+
+        // カタログ制御
+        function openCatalog(sport) {
+            currentSport = sport;
+            document.getElementById('start-screen').style.display = 'none';
+            google.script.run.withSuccessHandler(lib => {
+                designLibrary = lib;
+                const grid = document.getElementById('gallery-grid');
+                grid.innerHTML = '';
+                const sel = document.getElementById('design_select');
+                sel.innerHTML = '';
+
+                for(let name in lib) {
+                    let card = document.createElement('div');
+                    card.className = 'design-card';
+                    card.onclick = () => startSimulator(name);
+                    card.innerHTML = `<div class="thumb-box">${lib[name].variants[0].svg}</div><p>${name}</p>`;
+                    grid.appendChild(card);
+
+                    let opt = document.createElement('option'); opt.value = name; opt.textContent = name;
+                    sel.appendChild(opt);
+                }
+                document.getElementById('catalog-screen').style.display = 'flex';
+            }).getDesignLibraryBySport(sport);
+        }
+
+        function startSimulator(name) {
+            document.getElementById('design_select').value = name;
+            document.getElementById('catalog-screen').style.display = 'none';
+            document.getElementById('main-app').style.display = 'flex';
+            updateCollarOptions();
+        }
+
+        function goBackToStart() { document.getElementById('catalog-screen').style.display = 'none'; document.getElementById('start-screen').style.display = 'flex'; }
+        function goBackToCatalog() { document.getElementById('main-app').style.display = 'none'; document.getElementById('catalog-screen').style.display = 'flex'; }
+
+        function updateCollarOptions() {
+            const name = document.getElementById('design_select').value;
+            const sel = document.getElementById('collar_select');
+            sel.innerHTML = '';
+            designLibrary[name].variants.forEach((v, i) => {
+                let opt = document.createElement('option'); opt.value = i; opt.textContent = v.collar;
+                sel.appendChild(opt);
+            });
+            loadVariant();
+        }
+
+        function loadVariant() {
+            const name = document.getElementById('design_select').value;
+            const idx = document.getElementById('collar_select').value;
+            document.getElementById('svg-canvas').innerHTML = designLibrary[name].variants[idx].svg;
+            apply();
+        }
+
+        function apply() {
+            const svg = document.querySelector('#svg-canvas svg');
+            if(!svg) return;
+            // CSS変数（色）の反映
+            svg.style.setProperty('--c0', curColors.c0.c);
+            svg.style.setProperty('--c3', curColors.c3.c);
+            svg.style.setProperty('--c5', curColors.c5.c);
+            svg.style.setProperty('--c1', curColors.c1.c);
+            svg.style.setProperty('--nc', curColors.nc.c);
+
+            // 文字・番号の反映
+            const numVal = document.getElementById('v_num').value || "10";
+            const nameVal = (document.getElementById('v_name').value || "TASTO").toUpperCase();
+            
+            // SVG内にテキストレイヤーがなければ作成
+            if(!svg.getElementById('svg_num')) {
+                svg.insertAdjacentHTML('beforeend', `<g style="pointer-events:none;"><text id="svg_num" x="338" y="150" text-anchor="middle" font-family="Impact" font-size="100"></text><text id="svg_name" x="338" y="100" text-anchor="middle" font-family="Impact" font-size="40"></text></g>`);
+            }
+            const n = svg.getElementById('svg_num');
+            const m = svg.getElementById('svg_name');
+            n.textContent = numVal; n.setAttribute('fill', curColors.nc.c);
+            m.textContent = nameVal; m.setAttribute('fill', curColors.nc.c);
+        }
+
+        function saveOrder() {
+            const name = document.getElementById('design_select').value;
+            const idx = document.getElementById('collar_select').value;
+            const v = designLibrary[name].variants[idx];
+            const data = {
+                designId: v.id, designName: name, sportType: currentSport, collarType: v.collar,
+                number: document.getElementById('v_num').value,
+                nameText: document.getElementById('v_name').value,
+                colorBody: curColors.c0.n, colorSleeve: curColors.c3.n,
+                colorCollar: curColors.c5.n, colorLine1: curColors.c1.n, colorNum: curColors.nc.n
+            };
+            google.script.run.withSuccessHandler(() => alert("注文を送信しました！")).saveOrder(data);
+        }
+    </script>
+</body>
 </html>

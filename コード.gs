@@ -1,21 +1,11 @@
 function doGet(e) {
   var template = HtmlService.createTemplateFromFile('index');
   template.isAdmin = false;
-  return template.evaluate()
-    .setTitle('UNIFORM BUILDER')
-    .addMetaTag('viewport', 'width=device-width, initial-scale=1')
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  return template.evaluate().setTitle('UNIFORM BUILDER').addMetaTag('viewport', 'width=device-width, initial-scale=1').setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
-function onOpen() {
-  SpreadsheetApp.getUi().createMenu('★管理').addItem('起動', 'openApp').addToUi();
-}
-
-function openApp() {
-  var url = ScriptApp.getService().getUrl();
-  var html = HtmlService.createHtmlOutput('<html><script>window.open("' + url + '", "_blank");google.script.host.close();</script></html>').setWidth(300).setHeight(100);
-  SpreadsheetApp.getUi().showModalDialog(html, '起動中...');
-}
+function onOpen() { SpreadsheetApp.getUi().createMenu('★管理').addItem('起動', 'openApp').addToUi(); }
+function openApp() { var html = HtmlService.createHtmlOutput('<html><script>window.open("' + ScriptApp.getService().getUrl() + '", "_blank");google.script.host.close();</script></html>').setWidth(300).setHeight(100); SpreadsheetApp.getUi().showModalDialog(html, '起動中...'); }
 
 function getDesignLibraryBySport(s) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(s);
@@ -28,16 +18,17 @@ function getDesignLibraryBySport(s) {
   return lib;
 }
 
+// 保存項目に m_w (名前の幅) を追加
 function saveSportSettings(d) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName('システム設定') || ss.insertSheet('システム設定');
   if (sheet.getLastRow() === 0) {
-    sheet.appendRow(['競技', 'Scale', 'bgUrl', 'n_size', 'n_x', 'n_y', 'm_size', 'm_x', 'm_y']);
+    sheet.appendRow(['競技', 'Scale', 'bgUrl', 'n_size', 'n_x', 'n_y', 'm_size', 'm_x', 'm_y', 'm_w']);
   }
   var rows = sheet.getDataRange().getValues(), f = -1;
   for (var i = 1; i < rows.length; i++) { if (rows[i][0] === d.sportName) { f = i + 1; break; } }
-  var row = [d.sportName, d.scale, d.bgUrl, d.n_size, d.n_x, d.n_y, d.m_size, d.m_x, d.m_y];
-  if (f !== -1) sheet.getRange(f, 1, 1, 9).setValues([row]);
+  var row = [d.sportName, d.scale, d.bgUrl, d.n_size, d.n_x, d.n_y, d.m_size, d.m_x, d.m_y, d.m_w];
+  if (f !== -1) sheet.getRange(f, 1, 1, 10).setValues([row]);
   else sheet.appendRow(row);
   return "設定を保存しました";
 }
@@ -50,7 +41,8 @@ function getSportSettings() {
     s[data[i][0]] = { 
       scale: data[i][1], bgUrl: data[i][2], 
       n_size: data[i][3], n_x: data[i][4], n_y: data[i][5],
-      m_size: data[i][6], m_x: data[i][7], m_y: data[i][8]
+      m_size: data[i][6], m_x: data[i][7], m_y: data[i][8],
+      m_w: data[i][9] // 名前の幅
     };
   }
   return s;

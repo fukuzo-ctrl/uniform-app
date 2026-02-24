@@ -1,10 +1,11 @@
 /**
  * UNIFORM BUILDER PRO - Server Side Master
+ * 左右の袖の色（c3, c6）を個別に保存できるよう拡張。
  */
 
 function doGet(e) {
   var template = HtmlService.createTemplateFromFile('index');
-  template.isAdmin = false; 
+  template.isAdmin = (e && e.parameter && e.parameter.admin === 'true'); 
   return template.evaluate()
     .setTitle('UNIFORM BUILDER')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1')
@@ -21,9 +22,11 @@ function openApp() {
   SpreadsheetApp.getUi().showModalDialog(html, '起動中...');
 }
 
+// 競技別デザイン取得
 function getDesignLibraryBySport(s) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(s);
-  if (!sheet) throw new Error('シート「' + s + '」が見つかりません');
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(s);
+  if (!sheet) throw new Error('シート「' + s + '」が見つかりません。');
   var data = sheet.getDataRange().getValues(), lib = {};
   for (var i = 1; i < data.length; i++) {
     if (!data[i][1] || !data[i][3]) continue;
@@ -33,6 +36,11 @@ function getDesignLibraryBySport(s) {
   return lib;
 }
 
+function formatSelectedSVG(svgString) {
+  return svgString;
+}
+
+// 管理者設定の保存
 function saveSportSettings(d) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName('システム設定') || ss.insertSheet('システム設定');
@@ -47,38 +55,40 @@ function saveSportSettings(d) {
   return "設定を保存しました";
 }
 
+// 管理者設定の取得
 function getSportSettings() {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('システム設定');
   if (!sheet) return {};
   var data = sheet.getDataRange().getValues(), s = {};
   for (var i = 1; i < data.length; i++) {
-    s[data[i][0]] = { 
-      scale:data[i][1], bgUrl:data[i][2], n_size:data[i][3], n_x:data[i][4], n_y:data[i][5],
-      m_size:data[i][6], m_x:data[i][7], m_y:data[i][8], m_w:data[i][9]
-    };
+    s[data[i][0]] = { scale:data[i][1], bgUrl:data[i][2], n_size:data[i][3], n_x:data[i][4], n_y:data[i][5], m_size:data[i][6], m_x:data[i][7], m_y:data[i][8], m_w:data[i][9] };
   }
   return s;
 }
 
+// カラー定義の取得
 function getColorPalette() {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('カラー定義');
   if (!sheet) return null;
   return sheet.getDataRange().getValues().slice(1).map(function(r){ return {n:r[0], c:r[1]}; });
 }
 
+// カラー定義の保存
 function saveColorPalette(palette) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName('カラー定義') || ss.insertSheet('カラー定義');
-  sheet.clear(); sheet.appendRow(['色名', 'カラーコード']);
+  sheet.clear(); 
+  sheet.appendRow(['色名', 'カラーコード']);
   palette.forEach(function(p){ sheet.appendRow([p.n, p.c]); });
   return "カラーパレットを更新しました";
 }
 
+// 注文データの保存（右袖、左袖、名前色を分離）
 function saveOrder(d) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('注文一覧') || SpreadsheetApp.getActiveSpreadsheet().insertSheet('注文一覧');
   if (sheet.getLastRow() === 0) {
-    sheet.appendRow(["日時", "種別", "ID", "デザイン", "競技", "襟", "番号", "名前", "身頃1", "身頃2", "身頃3", "袖", "襟色", "番号色", "名前色"]);
+    sheet.appendRow(["日時", "種別", "ID", "デザイン", "競技", "襟", "番号", "名前", "身頃1", "身頃2", "身頃3", "右袖", "左袖", "襟色", "番号色", "名前色"]);
   }
-  sheet.appendRow([new Date(), d.itemType, d.designId, d.designName, d.sportType, d.collarType, d.number, d.nameText, d.colorBody1, d.colorBody2, d.colorBody3, d.colorSleeve, d.colorCollar, d.colorNum, d.colorName]);
+  sheet.appendRow([new Date(), d.itemType, d.designId, d.designName, d.sportType, d.collarType, d.number, d.nameText, d.colorBody1, d.colorBody2, d.colorBody3, d.colorSleeveR, d.colorSleeveL, d.colorCollar, d.colorNum, d.colorName]);
   return "SUCCESS";
 }

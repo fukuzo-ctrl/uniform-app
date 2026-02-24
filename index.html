@@ -7,15 +7,12 @@
         body { margin: 0; background: #e0e0e0; font-family: sans-serif; overflow: hidden; height: 100vh; }
         .screen { position: fixed; top:0; left:0; width:100%; height:100%; display:none; flex-direction: column; align-items: center; justify-content: center; }
         
-        /* スタート画面 - アイコン復活 */
         #start-screen { display: flex; background: var(--accent); color: #fff; z-index: 1000; }
         .sport-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; width: 90%; max-width: 600px; }
         .sport-card { background: #fff; color: #333; padding: 25px; border-radius: 15px; text-align: center; cursor: pointer; font-weight: bold; }
         
-        /* プレビューエリア - 明るいグレー背景に修正 */
-        .preview { flex-grow: 1; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle, #bcbcbc 0%, #8c8c8c 100%); position: relative; overflow: auto; }
+        .preview { flex-grow: 1; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle, #dcdcdc 0%, #b0b0b0 100%); background-size: cover; position: relative; overflow: auto; }
         
-        /* 3D白いジャージ土台 */
         #svg-canvas { 
             display: flex; align-items: center; justify-content: center; position: relative; width: 600px; height: 600px;
             background-image: url("https://drive.google.com/uc?export=view&id=1X1p9P-9uR-u_K9yX9P-9uR-u_K9yX9P"); 
@@ -23,21 +20,20 @@
         }
         svg { width: 100% !important; height: 100% !important; mix-blend-mode: multiply; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2)); }
         
-        /* サイドバー */
         .sidebar { width: var(--sidebar-w); background: #fff; padding: 15px; border-right: 1px solid #ccc; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
         .group { background: #f9f9f9; padding: 10px; border: 1px solid #eee; border-radius: 5px; }
         .label-row { display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; align-items: center; margin-bottom: 4px; }
         .swatch { width: 45px; height: 25px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; }
         
-        /* カラーピッカーポップアップ */
         .popover { position: fixed; left: 360px; top: 50%; transform: translateY(-50%); width: 220px; background: #fff; border: 1px solid #ccc; box-shadow: 0 5px 15px rgba(0,0,0,0.2); padding: 10px; display: none; z-index: 1000; border-radius: 8px; }
         .color-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
         .chip { width: 100%; aspect-ratio: 1; border-radius: 2px; cursor: pointer; border: 1px solid #eee; }
         
         .btn-save { background: var(--accent); color: #fff; border: none; padding: 12px; border-radius: 5px; font-weight: bold; cursor: pointer; width: 100%; }
         
-        /* 管理者モード用 */
-        #admin_indicator { color: red; font-size: 10px; font-weight: bold; text-align: center; }
+        /* 管理者パネルのデザイン */
+        #admin_panel { border: 2px dashed red; padding: 10px; background: #fff0f0; display: none; margin-bottom: 10px; }
+        #admin_indicator { color: red; font-size: 12px; font-weight: bold; text-align: center; margin-bottom: 5px; display: none; }
     </style>
 </head>
 <body onclick="hideAllPops()">
@@ -50,23 +46,31 @@
             <div class="sport-card" onclick="openCatalog('野球')">⚾ 野球</div>
             <div class="sport-card" onclick="openCatalog('バスケット')">🏀 バスケット</div>
         </div>
-        <div onclick="enableAdminMode()" style="position: absolute; bottom: 20px; right: 20px; opacity: 0.5; cursor: pointer; font-size: 12px;">管理者モード</div>
+        <div onclick="enableAdminModeInside()" style="position: absolute; bottom: 20px; right: 20px; opacity: 0.5; cursor: pointer; font-size: 12px;">管理者ログイン</div>
     </div>
 
-    <div id="catalog-screen" class="screen" style="background:#f0f0f2;">
-        <button onclick="goBackToStart()" style="margin:20px; padding:10px;">← 戻る</button>
+    <div id="catalog-screen" class="screen" style="background:#f0f0f2; align-items: center; justify-content: flex-start; padding-top:20px;">
+        <button onclick="goBackToStart()" style="margin-bottom:20px; padding:10px;">← 戻る</button>
         <div id="gallery-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:20px; width:90%;"></div>
     </div>
 
     <div id="main-app" class="screen" style="flex-direction:row; display:none;">
         <aside class="sidebar" onclick="event.stopPropagation()">
-            <button onclick="goBackToCatalog()">← カタログへ</button>
-            <div id="admin_indicator" style="display:none;">ADMIN MODE ACTIVE</div>
+            <button onclick="goBackToCatalog()" style="margin-bottom:10px;">← カタログへ</button>
+            
+            <div id="admin_indicator">【管理者モード】</div>
+            <div id="admin_panel">
+                <div class="label-row">大きさ (Scale) <span id="val_scale">100</span>%</div>
+                <input type="range" id="input_scale" min="50" max="200" value="100" oninput="apply()" style="width:100%;">
+                <div class="label-row" style="margin-top:10px;">背景画像URL</div>
+                <input type="text" id="input_bg" placeholder="https://..." oninput="apply()" style="width:100%; padding:5px; box-sizing:border-box;">
+                <button class="btn-save" onclick="saveSettings()" style="background:red; margin-top:10px;">この設定を保存</button>
+            </div>
             
             <div class="group">
-                <label style="font-size:10px; font-weight:bold;">デザイン</label>
-                <select id="design_select" onchange="updateCollarOptions()"></select>
-                <select id="collar_select" onchange="loadVariant()" style="margin-top:5px;"></select>
+                <label style="font-size:10px; font-weight:bold;">デザイン選択</label>
+                <select id="design_select" onchange="updateCollarOptions()" style="width:100%;"></select>
+                <select id="collar_select" onchange="loadVariant()" style="margin-top:5px; width:100%;"></select>
             </div>
 
             <div class="group">
@@ -77,16 +81,16 @@
             </div>
 
             <div class="group">
-                <label style="font-size:10px; font-weight:bold;">文字/番号</label>
+                <label style="font-size:10px; font-weight:bold;">文字・番号</label>
                 <div class="label-row">文字色 <span id="txt_nc" style="color:var(--accent);"></span> <div class="swatch" id="sw_nc" onclick="togglePop('nc')"></div></div>
-                <input type="text" id="v_num" placeholder="番号" oninput="apply()">
-                <input type="text" id="v_name" placeholder="名前" oninput="apply()">
+                <input type="text" id="v_num" placeholder="番号" oninput="apply()" style="width:100%; padding:8px; box-sizing:border-box;">
+                <input type="text" id="v_name" placeholder="名前" oninput="apply()" style="width:100%; padding:8px; box-sizing:border-box; margin-top:5px;">
             </div>
 
             <button class="btn-save" onclick="saveOrder()">注文を送信</button>
         </aside>
 
-        <main class="preview"><div id="svg-canvas"></div></main>
+        <main class="preview" id="preview_area"><div id="svg-canvas"></div></main>
 
         <div id="color-popover" class="popover" onclick="event.stopPropagation()">
             <div id="color-grid" class="color-grid"></div>
@@ -96,12 +100,12 @@
     <script>
         const COLORS = [{n:"ブラック",c:"#000000"},{n:"ネイビー",c:"#000040"},{n:"Aネイビー",c:"#001a4d"},{n:"Lネイビー",c:"#1a3366"},{n:"Pネイビー",c:"#333399"},{n:"ゴールド",c:"#c5a059"},{n:"Rブルー",c:"#0047ab"},{n:"ブルー",c:"#0055a4"},{n:"サックス",c:"#41b6e6"},{n:"Lサックス",c:"#a5d7e8"},{n:"ターコイズ",c:"#00a39b"},{n:"マリンブルー",c:"#00839b"},{n:"ライム",c:"#b7d433"},{n:"シルバー",c:"#c0c0c0"},{n:"Dグレー",c:"#666666"},{n:"グレー",c:"#999999"},{n:"イエロー",c:"#ffdc00"},{n:"Lイエロー",c:"#fff352"},{n:"エンジ",c:"#6d1719"},{n:"Dグリーン",c:"#003324"},{n:"グリーン",c:"#00703c"},{n:"ケリーグリーン",c:"#009b48"},{n:"Dパープル",c:"#361f5b"},{n:"パープル",c:"#5d2d91"},{n:"Lパープル",c:"#b19cd9"},{n:"Mパープル",c:"#8b008b"},{n:"ブラウン",c:"#4e2a1e"},{n:"オレンジ",c:"#f36f21"},{n:"Mオレンジ",c:"#ff8200"},{n:"Lオレンジ",c:"#ff9e1b"},{n:"アイボリー",c:"#f5f5dc"},{n:"Dレッド",c:"#a50034"},{n:"レッド",c:"#e4002b"},{n:"ホットピンク",c:"#e4007f"},{n:"ピンク",c:"#f49ac2"},{n:"Lピンク",c:"#ffc0cb"},{n:"イエローG",c:"#ffcc00"},{n:"ホワイト",c:"#ffffff"}];
         let curColors = { c0:{c:"#41b6e6",n:"サックス"}, c3:{c:"#b7d433",n:"ライム"}, c5:{c:"#e4002b",n:"レッド"}, nc:{c:"#000000",n:"ブラック"} };
-        let designLibrary = {}, activePart = null, currentSport = "", isAdmin = <?= isAdmin ?>;
+        let designLibrary = {}, savedSettings = {}, activePart = null, currentSport = "", isAdminActive = false;
 
         window.onload = () => {
             initColorPicker();
             updateSwatches();
-            if(isAdmin) document.getElementById('admin_indicator').style.display = 'block';
+            google.script.run.withSuccessHandler(s => { savedSettings = s; }).getSportSettings();
         };
 
         function initColorPicker() {
@@ -112,6 +116,19 @@
                 chip.onclick = () => selectColor(item.c, item.n);
                 grid.appendChild(chip);
             });
+        }
+
+        // 管理者モードへの切り替え（ページをリロードしない！）
+        function enableAdminModeInside() {
+            const pass = prompt("管理者パスワードを入力してください");
+            if(pass === "admin") { // パスワードは自由に変えてください
+                isAdminActive = true;
+                document.getElementById('admin_indicator').style.display = 'block';
+                document.getElementById('admin_panel').style.display = 'block';
+                alert("管理者モードでログインしました");
+            } else {
+                alert("パスワードが違います");
+            }
         }
 
         function togglePop(p) { activePart = p; document.getElementById('color-popover').style.display = 'block'; }
@@ -132,8 +149,8 @@
                 designLibrary = lib; const grid = document.getElementById('gallery-grid'); grid.innerHTML = '';
                 const sel = document.getElementById('design_select'); sel.innerHTML = '';
                 for(let name in lib) {
-                    let card = document.createElement('div'); card.className = 'sport-card'; card.onclick = () => startSim(name);
-                    card.innerHTML = `<div style="height:100px;">${lib[name].variants[0].svg}</div><p>${name}</p>`;
+                    let card = document.createElement('div'); card.className = 'sport-card'; card.style.padding = '10px'; card.onclick = () => startSim(name);
+                    card.innerHTML = `<div style="height:120px; overflow:hidden;">${lib[name].variants[0].svg}</div><p>${name}</p>`;
                     grid.appendChild(card);
                     let opt = document.createElement('option'); opt.value = name; opt.textContent = name; sel.appendChild(opt);
                 }
@@ -141,7 +158,19 @@
             }).getDesignLibraryBySport(s);
         }
 
-        function startSim(n) { document.getElementById('design_select').value = n; document.getElementById('catalog-screen').style.display='none'; document.getElementById('main-app').style.display='flex'; updateCollarOptions(); }
+        function startSim(n) {
+            document.getElementById('design_select').value = n;
+            document.getElementById('catalog-screen').style.display='none';
+            document.getElementById('main-app').style.display='flex';
+            
+            // 保存された設定（大きさ・背景）を反映
+            const s = savedSettings[currentSport] || { scale: 100, bgUrl: "" };
+            document.getElementById('input_scale').value = s.scale;
+            document.getElementById('input_bg').value = s.bgUrl;
+            
+            updateCollarOptions();
+        }
+
         function goBackToStart() { document.getElementById('catalog-screen').style.display='none'; document.getElementById('start-screen').style.display='flex'; }
         function goBackToCatalog() { document.getElementById('main-app').style.display='none'; document.getElementById('catalog-screen').style.display='flex'; }
 
@@ -162,8 +191,22 @@
         }
 
         function apply() {
-            const svg = document.querySelector('#svg-canvas svg');
+            const canvas = document.getElementById('svg-canvas');
+            const preview = document.getElementById('preview_area');
+            const svg = canvas.querySelector('svg');
             if(!svg) return;
+
+            // 大きさ (Scale) の反映
+            const sc = document.getElementById('input_scale').value;
+            document.getElementById('val_scale').textContent = sc;
+            canvas.style.width = (6 * sc) + "px";
+            canvas.style.height = (6 * sc) + "px";
+
+            // 背景画像の反映
+            const bg = document.getElementById('input_bg').value;
+            preview.style.backgroundImage = bg ? `url("${bg}")` : '';
+
+            // 色の反映
             svg.style.setProperty('--c0', curColors.c0.c);
             svg.style.setProperty('--c3', curColors.c3.c);
             svg.style.setProperty('--c5', curColors.c5.c);
@@ -172,13 +215,20 @@
             if(!svg.getElementById('svg_num')) {
                 svg.insertAdjacentHTML('beforeend', `<g style="pointer-events:none;"><text id="svg_num" x="338" y="150" text-anchor="middle" font-family="Impact" font-size="100"></text><text id="svg_name" x="338" y="100" text-anchor="middle" font-family="Impact" font-size="40"></text></g>`);
             }
-            svg.getElementById('svg_num').textContent = document.getElementById('v_num').value || "10";
+            svg.getElementById('svg_num').textContent = document.getElementById('v_num').value || (isAdminActive ? "" : "10");
             svg.getElementById('svg_num').setAttribute('fill', curColors.nc.c);
-            svg.getElementById('svg_name').textContent = (document.getElementById('v_name').value || "TASTO").toUpperCase();
+            svg.getElementById('svg_name').textContent = (document.getElementById('v_name').value || (isAdminActive ? "" : "TASTO")).toUpperCase();
             svg.getElementById('svg_name').setAttribute('fill', curColors.nc.c);
         }
 
-        function enableAdminMode() { location.href = location.href.split('?')[0] + '?admin=true'; }
+        function saveSettings() {
+            const data = {
+                sportName: currentSport,
+                scale: document.getElementById('input_scale').value,
+                bgUrl: document.getElementById('input_bg').value
+            };
+            google.script.run.withSuccessHandler(res => alert(res)).saveSportSettings(data);
+        }
 
         function saveOrder() {
             const n = document.getElementById('design_select').value;

@@ -28,7 +28,6 @@ function getDesignLibraryBySport(s) {
   return lib;
 }
 
-// 全ての管理者設定（位置・サイズ含む）を保存
 function saveSportSettings(d) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName('システム設定') || ss.insertSheet('システム設定');
@@ -59,7 +58,7 @@ function getSportSettings() {
 
 function saveOrder(d) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('注文一覧') || SpreadsheetApp.getActiveSpreadsheet().insertSheet('注文一覧');
-  if (sheet.getLastRow() === 0) sheet.appendRow(["日時", "ID", "デザイン", "競技", "襟", "番号", "名前", "身頃", "袖", "襟色", "線1", "線2", "番色", "名色"]);
-  sheet.appendRow([new Date(), d.designId, d.designName, d.sportType, d.collarType, d.number, d.nameText, d.colorBody, d.colorSleeve, d.colorCollar, d.colorLine1, d.colorLine2, d.colorNum, d.colorName]);
+  if (sheet.getLastRow() === 0) sheet.appendRow(["日時", "ID", "デザイン", "競技", "襟", "番号", "名前", "身頃1", "身頃2", "身頃3", "袖", "襟色", "番色", "名色"]);
+  sheet.appendRow([new Date(), d.designId, d.designName, d.sportType, d.collarType, d.number, d.nameText, d.colorBody1, d.colorBody2, d.colorBody3, d.colorSleeve, d.colorCollar, d.colorNum, d.colorName]);
   return "SUCCESS";
 }

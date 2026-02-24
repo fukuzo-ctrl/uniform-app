@@ -77,7 +77,9 @@
 
             <div class="group">
                 <label style="font-size:10px; font-weight:bold;">カラー設定 (38色)</label>
-                <div class="label-row">身頃 <span id="txt_c0" style="color:var(--accent);"></span> <div class="swatch" id="sw_c0" onclick="togglePop('c0')"></div></div>
+                <div class="label-row">身頃 1 <span id="txt_c0" style="color:var(--accent);"></span> <div class="swatch" id="sw_c0" onclick="togglePop('c0')"></div></div>
+                <div class="label-row">身頃 2 (柄1) <span id="txt_c1" style="color:var(--accent);"></span> <div class="swatch" id="sw_c1" onclick="togglePop('c1')"></div></div>
+                <div class="label-row">身頃 3 (柄2) <span id="txt_c4" style="color:var(--accent);"></span> <div class="swatch" id="sw_c4" onclick="togglePop('c4')"></div></div>
                 <div class="label-row">袖 <span id="txt_c3" style="color:var(--accent);"></span> <div class="swatch" id="sw_c3" onclick="togglePop('c3')"></div></div>
                 <div class="label-row">襟 <span id="txt_c5" style="color:var(--accent);"></span> <div class="swatch" id="sw_c5" onclick="togglePop('c5')"></div></div>
             </div>
@@ -98,13 +100,11 @@
 
     <script>
         const COLORS = [{n:"ブラック",c:"#000000"},{n:"ネイビー",c:"#000040"},{n:"Aネイビー",c:"#001a4d"},{n:"Lネイビー",c:"#1a3366"},{n:"Pネイビー",c:"#333399"},{n:"ゴールド",c:"#c5a059"},{n:"Rブルー",c:"#0047ab"},{n:"ブルー",c:"#0055a4"},{n:"サックス",c:"#41b6e6"},{n:"Lサックス",c:"#a5d7e8"},{n:"ターコイズ",c:"#00a39b"},{n:"マリンブルー",c:"#00839b"},{n:"ライム",c:"#b7d433"},{n:"シルバー",c:"#c0c0c0"},{n:"Dグレー",c:"#666666"},{n:"グレー",c:"#999999"},{n:"イエロー",c:"#ffdc00"},{n:"Lイエロー",c:"#fff352"},{n:"エンジ",c:"#6d1719"},{n:"Dグリーン",c:"#003324"},{n:"グリーン",c:"#00703c"},{n:"ケリーグリーン",c:"#009b48"},{n:"Dパープル",c:"#361f5b"},{n:"パープル",c:"#5d2d91"},{n:"Lパープル",c:"#b19cd9"},{n:"Mパープル",c:"#8b008b"},{n:"ブラウン",c:"#4e2a1e"},{n:"オレンジ",c:"#f36f21"},{n:"Mオレンジ",c:"#ff8200"},{n:"Lオレンジ",c:"#ff9e1b"},{n:"アイボリー",c:"#f5f5dc"},{n:"Dレッド",c:"#a50034"},{n:"レッド",c:"#e4002b"},{n:"ホットピンク",c:"#e4007f"},{n:"ピンク",c:"#f49ac2"},{n:"Lピンク",c:"#ffc0cb"},{n:"イエローG",c:"#ffcc00"},{n:"ホワイト",c:"#ffffff"}];
-        let curColors = { c0:{c:"#41b6e6",n:"サックス"}, c3:{c:"#b7d433",n:"ライム"}, c5:{c:"#e4002b",n:"レッド"}, nc:{c:"#000000",n:"ブラック"} };
+        // 全レイヤーの初期値を設定
+        let curColors = { c0:{c:"#41b6e6",n:"サックス"}, c1:{c:"#e4002b",n:"レッド"}, c4:{c:"#ffffff",n:"ホワイト"}, c3:{c:"#b7d433",n:"ライム"}, c5:{c:"#e4002b",n:"レッド"}, nc:{c:"#000000",n:"ブラック"} };
         let designLibrary = {}, savedSettings = {}, activePart = null, currentSport = "", isAdminActive = false;
 
-        window.onload = () => {
-            initColorPicker(); updateSwatches();
-            google.script.run.withSuccessHandler(s => { savedSettings = s; }).getSportSettings();
-        };
+        window.onload = () => { initColorPicker(); updateSwatches(); google.script.run.withSuccessHandler(s => { savedSettings = s; }).getSportSettings(); };
 
         function initColorPicker() {
             const grid = document.getElementById('color-grid');
@@ -116,15 +116,13 @@
 
         function enableAdminModeInside() {
             const pass = prompt("管理者パスワード");
-            if(pass === "admin") {
-                isAdminActive = true; document.getElementById('admin_panel').style.display = 'block'; alert("管理者モードON");
-            }
+            if(pass === "admin") { isAdminActive = true; document.getElementById('admin_panel').style.display = 'block'; alert("管理者モードON"); }
         }
 
         function togglePop(p) { activePart = p; document.getElementById('color-popover').style.display = 'block'; }
         function hideAllPops() { document.getElementById('color-popover').style.display = 'none'; }
         function selectColor(c, n) { curColors[activePart] = {c:c, n:n}; updateSwatches(); apply(); hideAllPops(); }
-        function updateSwatches() { for(let id in curColors) { document.getElementById("sw_"+id).style.backgroundColor = curColors[id].c; document.getElementById("txt_"+id).textContent = curColors[id].n; } }
+        function updateSwatches() { for(let id in curColors) { const elSw = document.getElementById("sw_"+id); const elTxt = document.getElementById("txt_"+id); if(elSw) elSw.style.backgroundColor = curColors[id].c; if(elTxt) elTxt.textContent = curColors[id].n; } }
 
         function openCatalog(s) {
             currentSport = s; document.getElementById('start-screen').style.display = 'none';
@@ -142,9 +140,7 @@
         }
 
         function startSim(n) {
-            document.getElementById('design_select').value = n;
-            document.getElementById('catalog-screen').style.display='none';
-            document.getElementById('main-app').style.display='flex';
+            document.getElementById('design_select').value = n; document.getElementById('catalog-screen').style.display='none'; document.getElementById('main-app').style.display='flex';
             const s = savedSettings[currentSport] || { scale:100, bgUrl:"", n_size:100, n_x:338, n_y:150, m_size:40, m_x:338, m_y:100 };
             document.getElementById('i_sc').value = s.scale; document.getElementById('i_bg').value = s.bgUrl;
             document.getElementById('i_ns').value = s.n_size; document.getElementById('i_nx').value = s.n_x; document.getElementById('i_ny').value = s.n_y;
@@ -176,7 +172,13 @@
             canvas.style.width = (6 * sc) + "px"; canvas.style.height = (6 * sc) + "px";
             preview.style.backgroundImage = document.getElementById('i_bg').value ? `url("${document.getElementById('i_bg').value}")` : '';
 
-            svg.style.setProperty('--c0', curColors.c0.c); svg.style.setProperty('--c3', curColors.c3.c); svg.style.setProperty('--c5', curColors.c5.c); svg.style.setProperty('--nc', curColors.nc.c);
+            // 全レイヤーの色変数を一括反映
+            svg.style.setProperty('--c0', curColors.c0.c);
+            svg.style.setProperty('--c1', curColors.c1.c);
+            svg.style.setProperty('--c4', curColors.c4.c);
+            svg.style.setProperty('--c3', curColors.c3.c);
+            svg.style.setProperty('--c5', curColors.c5.c);
+            svg.style.setProperty('--nc', curColors.nc.c);
             
             if(!svg.getElementById('svg_num')) {
                 svg.insertAdjacentHTML('beforeend', `<g style="pointer-events:none;"><text id="svg_num" text-anchor="middle" font-family="Impact"></text><text id="svg_name" text-anchor="middle" font-family="Impact"></text></g>`);
@@ -190,27 +192,18 @@
 
             n.textContent = document.getElementById('v_num').value || (isAdminActive ? "" : "10");
             n.setAttribute('fill', curColors.nc.c); n.setAttribute('font-size', ns); n.setAttribute('x', nx); n.setAttribute('y', ny);
-            
             m.textContent = (document.getElementById('v_name').value || (isAdminActive ? "" : "TASTO")).toUpperCase();
             m.setAttribute('fill', curColors.nc.c); m.setAttribute('font-size', ms); m.setAttribute('x', mx); m.setAttribute('y', my);
         }
 
         function saveSettings() {
-            const data = {
-                sportName: currentSport, scale: document.getElementById('i_sc').value, bgUrl: document.getElementById('i_bg').value,
-                n_size: document.getElementById('i_ns').value, n_x: document.getElementById('i_nx').value, n_y: document.getElementById('i_ny').value,
-                m_size: document.getElementById('i_ms').value, m_x: document.getElementById('i_mx').value, m_y: document.getElementById('i_my').value
-            };
+            const data = { sportName: currentSport, scale: document.getElementById('i_sc').value, bgUrl: document.getElementById('i_bg').value, n_size: document.getElementById('i_ns').value, n_x: document.getElementById('i_nx').value, n_y: document.getElementById('i_ny').value, m_size: document.getElementById('i_ms').value, m_x: document.getElementById('i_mx').value, m_y: document.getElementById('i_my').value };
             google.script.run.withSuccessHandler(res => alert(res)).saveSportSettings(data);
         }
 
         function saveOrder() {
             const n = document.getElementById('design_select').value, i = document.getElementById('collar_select').value, v = designLibrary[n].variants[i];
-            const data = {
-                designId: v.id, designName: n, sportType: currentSport, collarType: v.collar,
-                number: document.getElementById('v_num').value, nameText: document.getElementById('v_name').value,
-                colorBody: curColors.c0.n, colorSleeve: curColors.c3.n, colorCollar: curColors.c5.n, colorNum: curColors.nc.n
-            };
+            const data = { designId: v.id, designName: n, sportType: currentSport, collarType: v.collar, number: document.getElementById('v_num').value, nameText: document.getElementById('v_name').value, colorBody1: curColors.c0.n, colorBody2: curColors.c1.n, colorBody3: curColors.c4.n, colorSleeve: curColors.c3.n, colorCollar: curColors.c5.n, colorNum: curColors.nc.n };
             google.script.run.withSuccessHandler(() => alert("送信完了")).saveOrder(data);
         }
     </script>

@@ -15,20 +15,17 @@
         .sidebar { width: var(--sidebar-w); background: #fff; padding: 15px; border-right: 1px solid #ccc; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
         .group { background: #f9f9f9; padding: 10px; border: 1px solid #eee; border-radius: 5px; }
         .label-row { display: grid; grid-template-columns: 85px 1fr 45px; align-items: center; gap: 10px; font-size: 11px; font-weight: bold; margin-bottom: 6px; }
-        .color-name-display { text-align: right; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .swatch { width: 45px; height: 25px; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; }
         .popover { position: fixed; left: 360px; top: 50%; transform: translateY(-50%); width: 240px; background: #fff; border: 1px solid #ccc; box-shadow: 0 5px 25px rgba(0,0,0,0.3); padding: 12px; display: none; z-index: 1000; border-radius: 10px; }
-        #hover-color-name { height: 20px; text-align: center; margin-bottom: 10px; font-weight: bold; color: var(--accent); border-bottom: 1px solid #eee; font-size: 13px; }
-        .color-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
-        .chip { width: 100%; aspect-ratio: 1; border-radius: 4px; cursor: pointer; border: 1px solid #ddd; }
         .btn-save { background: var(--accent); color: #fff; border: none; padding: 12px; border-radius: 5px; font-weight: bold; cursor: pointer; width: 100%; }
         #admin_panel { display: none; }
         .admin-item { font-size: 10px; color: #666; margin-top: 5px; }
         input[type="range"] { width: 100%; margin: 2px 0; cursor: pointer; }
         
-        /* カラーマスタ編集用 */
-        .color-edit-row { display: grid; grid-template-columns: 1fr 60px; gap: 5px; margin-bottom: 3px; }
-        .color-edit-row input { font-size: 10px; padding: 2px; }
+        /* 種別切り替え用タブ */
+        .type-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 5px; }
+        .type-btn { font-size: 10px; padding: 5px; background: #ddd; border: none; border-radius: 3px; cursor: pointer; }
+        .type-btn.active { background: var(--accent); color: #fff; }
     </style>
 </head>
 <body onclick="hideAllPops()">
@@ -60,15 +57,22 @@
                 <div class="admin-item">番号サイズ/位置</div>
                 <input type="range" id="i_ns" min="10" max="300" oninput="apply()"><input type="range" id="i_nx" min="0" max="676" oninput="apply()"><input type="range" id="i_ny" min="0" max="800" oninput="apply()">
                 <div class="admin-item">名前サイズ/位置/最大幅</div>
-                <input type="range" id="i_ms" min="5" max="150" oninput="apply()"><input type="range" id="i_mx" min="0" max="676" oninput="apply()"><input type="range" id="i_my" min="0" max="800" oninput="apply()">
-                <input type="range" id="i_mw" min="50" max="600" oninput="apply()">
+                <input type="range" id="i_ms" min="5" max="150" oninput="apply()"><input type="range" id="i_mx" min="0" max="676" oninput="apply()"><input type="range" id="i_my" min="0" max="800" oninput="apply()"><input type="range" id="i_mw" min="50" max="600" oninput="apply()">
                 <div class="admin-item">背景画像URL</div>
                 <input type="text" id="i_bg" style="width:100%; font-size:10px;" oninput="apply()">
                 <button class="btn-save" onclick="saveSettings()" style="background:#d9534f; margin-top:10px; font-size:11px;">設定を保存</button>
-                
                 <div style="color:blue; font-weight:bold; font-size:11px; margin:15px 0 5px;">★カラーマスタ編集</div>
-                <div id="admin-palette-editor" style="max-height: 200px; overflow-y: auto; background: #fff; padding: 5px; border: 1px solid #ddd;"></div>
+                <div id="admin-palette-editor" style="max-height: 150px; overflow-y: auto; background: #fff; padding: 5px; border: 1px solid #ddd;"></div>
                 <button class="btn-save" onclick="saveMasterPalette()" style="background:blue; margin-top:5px; font-size:11px;">色玉を保存</button>
+            </div>
+
+            <div class="group">
+                <label style="font-size:10px; font-weight:bold;">商品種別</label>
+                <div class="type-selector">
+                    <button id="type_shirt" class="type-btn active" onclick="changeItemType('シャツのみ')">シャツのみ</button>
+                    <button id="type_pants" class="type-btn" onclick="changeItemType('パンツのみ')">パンツのみ</button>
+                    <button id="type_set" class="type-btn" onclick="changeItemType('セット')">セット</button>
+                </div>
             </div>
             
             <div class="group">
@@ -79,16 +83,14 @@
 
             <div class="group">
                 <label style="font-size:10px; font-weight:bold;">カラー設定</label>
-                <div class="label-row"><span>身頃 1</span> <span id="txt_c0" class="color-name-display"></span> <div class="swatch" id="sw_c0" onclick="togglePop('c0')"></div></div>
-                <div class="label-row"><span>身頃 2</span> <span id="txt_c1" class="color-name-display"></span> <div class="swatch" id="sw_c1" onclick="togglePop('c1')"></div></div>
-                <div class="label-row"><span>身頃 3</span> <span id="txt_c4" class="color-name-display"></span> <div class="swatch" id="sw_c4" onclick="togglePop('c4')"></div></div>
-                <div class="label-row"><span>袖</span> <span id="txt_c3" class="color-name-display"></span> <div class="swatch" id="sw_c3" onclick="togglePop('c3')"></div></div>
-                <div class="label-row"><span>襟</span> <span id="txt_c5" class="color-name-display"></span> <div class="swatch" id="sw_c5" onclick="togglePop('c5')"></div></div>
+                <div class="label-row"><span>身頃 1</span> <span id="txt_c0" style="text-align:right;"></span> <div class="swatch" id="sw_c0" onclick="togglePop('c0')"></div></div>
+                <div class="label-row"><span>身頃 2</span> <span id="txt_c1" style="text-align:right;"></span> <div class="swatch" id="sw_c1" onclick="togglePop('c1')"></div></div>
+                <div class="label-row"><span>袖</span> <span id="txt_c3" style="text-align:right;"></span> <div class="swatch" id="sw_c3" onclick="togglePop('c3')"></div></div>
+                <div class="label-row"><span>襟・パンツ</span> <span id="txt_c5" style="text-align:right;"></span> <div class="swatch" id="sw_c5" onclick="togglePop('c5')"></div></div>
             </div>
 
             <div class="group">
                 <label style="font-size:10px; font-weight:bold;">文字・番号</label>
-                <div class="label-row"><span>文字色</span> <span id="txt_nc" class="color-name-display"></span> <div class="swatch" id="sw_nc" onclick="togglePop('nc')"></div></div>
                 <input type="text" id="v_num" placeholder="番号" oninput="apply()" style="width:100%;">
                 <input type="text" id="v_name" placeholder="名前" oninput="apply()" style="width:100%; margin-top:5px;">
             </div>
@@ -101,50 +103,41 @@
     </div>
 
     <script>
-        let COLORS = [{n:"ブラック",c:"#000000"},{n:"ネイビー",c:"#000040"},{n:"Aネイビー",c:"#001a4d"},{n:"Lネイビー",c:"#1a3366"},{n:"Pネイビー",c:"#333399"},{n:"ゴールド",c:"#c5a059"},{n:"Rブルー",c:"#0047ab"},{n:"ブルー",c:"#0055a4"},{n:"サックス",c:"#41b6e6"},{n:"Lサックス",c:"#a5d7e8"},{n:"ターコイズ",c:"#00a39b"},{n:"マリンブルー",c:"#00839b"},{n:"ライム",c:"#b7d433"},{n:"シルバー",c:"#c0c0c0"},{n:"Dグレー",c:"#666666"},{n:"グレー",c:"#999999"},{n:"イエロー",c:"#ffdc00"},{n:"Lイエロー",c:"#fff352"},{n:"エンジ",c:"#6d1719"},{n:"Dグリーン",c:"#003324"},{n:"グリーン",c:"#00703c"},{n:"ケリーグリーン",c:"#009b48"},{n:"Dパープル",c:"#361f5b"},{n:"パープル",c:"#5d2d91"},{n:"Lパープル",c:"#b19cd9"},{n:"Mパープル",c:"#8b008b"},{n:"ブラウン",c:"#4e2a1e"},{n:"オレンジ",c:"#f36f21"},{n:"Mオレンジ",c:"#ff8200"},{n:"Lオレンジ",c:"#ff9e1b"},{n:"アイボリー",c:"#f5f5dc"},{n:"Dレッド",c:"#a50034"},{n:"レッド",c:"#e4002b"},{n:"ホットピンク",c:"#e4007f"},{n:"ピンク",c:"#f49ac2"},{n:"Lピンク",c:"#ffc0cb"},{n:"イエローG",c:"#ffcc00"},{n:"ホワイト",c:"#ffffff"}];
-        let curColors = { c0:{c:"#41b6e6",n:"サックス"}, c1:{c:"#e4002b",n:"レッド"}, c4:{c:"#ffffff",n:"ホワイト"}, c3:{c:"#b7d433",n:"ライム"}, c5:{c:"#e4002b",n:"レッド"}, nc:{c:"#000000",n:"ブラック"} };
-        let designLibrary = {}, savedSettings = {}, activePart = null, currentSport = "", isAdminActive = false;
+        let COLORS = [{n:"ブラック",c:"#000000"},{n:"ホワイト",c:"#ffffff"}];
+        let curColors = { c0:{c:"#ffffff",n:"ホワイト"}, c1:{c:"#ffffff",n:"ホワイト"}, c4:{c:"#ffffff",n:"ホワイト"}, c3:{c:"#ffffff",n:"ホワイト"}, c5:{c:"#ffffff",n:"ホワイト"}, nc:{c:"#000000",n:"ブラック"} };
+        let designLibrary = {}, savedSettings = {}, activePart = null, currentSport = "", currentType = "シャツのみ";
 
         window.onload = () => {
-            google.script.run.withSuccessHandler(p => {
-                if(p) COLORS = p;
-                initColorPicker();
-                updateSwatches();
-            }).getColorPalette();
+            google.script.run.withSuccessHandler(p => { if(p) COLORS = p; initColorPicker(); updateSwatches(); }).getColorPalette();
             google.script.run.withSuccessHandler(s => { savedSettings = s; }).getSportSettings();
         };
 
         function initColorPicker() {
-            const grid = document.getElementById('color-grid'), nameDisp = document.getElementById('hover-color-name');
-            const adminEditor = document.getElementById('admin-palette-editor');
+            const grid = document.getElementById('color-grid'), nameDisp = document.getElementById('hover-color-name'), adminEditor = document.getElementById('admin-palette-editor');
             grid.innerHTML = ''; adminEditor.innerHTML = '';
-            
             COLORS.forEach((item, i) => {
-                // 一般用チップ
                 const chip = document.createElement('div'); chip.className = 'chip'; chip.style.backgroundColor = item.c;
-                chip.onmouseover = () => { nameDisp.textContent = item.n; nameDisp.style.color = (item.c === '#ffffff' ? '#333' : item.c); };
-                chip.onmouseout = () => { nameDisp.textContent = "色名"; nameDisp.style.color = "var(--accent)"; };
+                chip.onmouseover = () => { nameDisp.textContent = item.n; };
                 chip.onclick = () => selectColor(item.c, item.n); grid.appendChild(chip);
-
-                // 管理者用編集フォーム
-                const row = document.createElement('div'); row.className = 'color-edit-row';
-                row.innerHTML = `<input type="text" id="pal_n_${i}" value="${item.n}"> <input type="color" id="pal_c_${i}" value="${item.c.length===7?item.c:'#ffffff'}">`;
+                const row = document.createElement('div'); row.style.display="flex"; row.innerHTML = `<input type="text" id="pal_n_${i}" value="${item.n}" style="flex:1"> <input type="color" id="pal_c_${i}" value="${item.c}">`;
                 adminEditor.appendChild(row);
             });
         }
 
-        function saveMasterPalette() {
-            let newPalette = [];
-            COLORS.forEach((_, i) => {
-                newPalette.push({ n: document.getElementById(`pal_n_${i}`).value, c: document.getElementById(`pal_c_${i}`).value });
-            });
-            google.script.run.withSuccessHandler(res => { alert(res); location.reload(); }).saveColorPalette(newPalette);
+        // 種別切り替え
+        function changeItemType(type) {
+            currentType = type;
+            document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
+            if(type==='シャツのみ') document.getElementById('type_shirt').classList.add('active');
+            if(type==='パンツのみ') document.getElementById('type_pants').classList.add('active');
+            if(type==='セット') document.getElementById('type_set').classList.add('active');
+            apply();
         }
 
-        function enableAdminModeInside() { if(prompt("パスワード") === "admin") { isAdminActive = true; document.getElementById('admin_panel').style.display = 'block'; alert("管理者モードON"); } }
+        function enableAdminModeInside() { if(prompt("パスワード") === "admin") document.getElementById('admin_panel').style.display = 'block'; }
+        function selectColor(c, n) { curColors[activePart] = {c:c, n:n}; updateSwatches(); apply(); hideAllPops(); }
         function togglePop(p) { activePart = p; document.getElementById('color-popover').style.display = 'block'; }
         function hideAllPops() { document.getElementById('color-popover').style.display = 'none'; }
-        function selectColor(c, n) { curColors[activePart] = {c:c, n:n}; updateSwatches(); apply(); hideAllPops(); }
         function updateSwatches() { for(let id in curColors) { const sw=document.getElementById("sw_"+id), tx=document.getElementById("txt_"+id); if(sw) sw.style.backgroundColor = curColors[id].c; if(tx) tx.textContent = curColors[id].n; } }
 
         function openCatalog(s) {
@@ -153,7 +146,7 @@
                 designLibrary = lib; const grid = document.getElementById('gallery-grid'); grid.innerHTML = '';
                 const sel = document.getElementById('design_select'); sel.innerHTML = '';
                 for(let name in lib) {
-                    let card = document.createElement('div'); card.className = 'sport-card'; card.style.padding = '10px'; card.onclick = () => startSim(name);
+                    let card = document.createElement('div'); card.className = 'sport-card'; card.onclick = () => startSim(name);
                     card.innerHTML = `<div style="height:120px; overflow:hidden;">${lib[name].variants[0].svg}</div><p>${name}</p>`;
                     grid.appendChild(card);
                     let opt = document.createElement('option'); opt.value = name; opt.textContent = name; sel.appendChild(opt);
@@ -165,14 +158,10 @@
         function startSim(n) {
             document.getElementById('design_select').value = n; document.getElementById('catalog-screen').style.display='none'; document.getElementById('main-app').style.display='flex';
             const s = savedSettings[currentSport] || { scale:100, bgUrl:"", n_size:100, n_x:338, n_y:150, m_size:40, m_x:338, m_y:100, m_w:250 };
-            document.getElementById('i_sc').value = s.scale; document.getElementById('i_bg').value = s.bgUrl;
-            document.getElementById('i_ns').value = s.n_size; document.getElementById('i_nx').value = s.n_x; document.getElementById('i_ny').value = s.n_y;
-            document.getElementById('i_ms').value = s.m_size; document.getElementById('i_mx').value = s.m_x; document.getElementById('i_my').value = s.m_y;
-            document.getElementById('i_mw').value = s.m_w; updateCollarOptions();
+            document.getElementById('i_sc').value = s.scale; document.getElementById('i_ns').value = s.n_size; document.getElementById('i_nx').value = s.n_x; document.getElementById('i_ny').value = s.n_y;
+            document.getElementById('i_ms').value = s.m_size; document.getElementById('i_mx').value = s.m_x; document.getElementById('i_my').value = s.m_y; document.getElementById('i_mw').value = s.m_w;
+            updateCollarOptions();
         }
-
-        function goBackToStart() { document.getElementById('catalog-screen').style.display='none'; document.getElementById('start-screen').style.display='flex'; }
-        function goBackToCatalog() { document.getElementById('main-app').style.display='none'; document.getElementById('catalog-screen').style.display='flex'; }
 
         function updateCollarOptions() {
             const n = document.getElementById('design_select').value;
@@ -188,36 +177,25 @@
         }
 
         function apply() {
-            const canvas = document.getElementById('svg-canvas'), preview = document.getElementById('preview_area'), svg = canvas.querySelector('svg');
-            if(!svg) return;
-            const sc = document.getElementById('i_sc').value; document.getElementById('v_sc').textContent = sc;
-            canvas.style.width = (6 * sc) + "px"; canvas.style.height = (6 * sc) + "px";
-            preview.style.backgroundImage = document.getElementById('i_bg').value ? `url("${document.getElementById('i_bg').value}")` : '';
+            const svg = document.querySelector('#svg-canvas svg'); if(!svg) return;
+            // 表示切り替えロジック
+            const shirtParts = svg.querySelectorAll('[id^="shirt"]');
+            const pantsParts = svg.querySelectorAll('[id^="pants"]');
+            if(currentType === 'シャツのみ') { shirtParts.forEach(p=>p.style.display=''); pantsParts.forEach(p=>p.style.display='none'); }
+            else if(currentType === 'パンツのみ') { shirtParts.forEach(p=>p.style.display='none'); pantsParts.forEach(p=>p.style.display=''); }
+            else { shirtParts.forEach(p=>p.style.display=''); pantsParts.forEach(p=>p.style.display=''); }
 
-            svg.style.setProperty('--c0', curColors.c0.c); svg.style.setProperty('--c1', curColors.c1.c); svg.style.setProperty('--c4', curColors.c4.c);
-            svg.style.setProperty('--c3', curColors.c3.c); svg.style.setProperty('--c5', curColors.c5.c); svg.style.setProperty('--nc', curColors.nc.c);
+            const sc = document.getElementById('i_sc').value;
+            document.getElementById('svg-canvas').style.width = (6*sc)+"px"; document.getElementById('svg-canvas').style.height = (6*sc)+"px";
+            svg.style.setProperty('--c0', curColors.c0.c); svg.style.setProperty('--c1', curColors.c1.c); svg.style.setProperty('--c3', curColors.c3.c); svg.style.setProperty('--c5', curColors.c5.c); svg.style.setProperty('--nc', curColors.nc.c);
             
-            if(!svg.getElementById('svg_num')) { svg.insertAdjacentHTML('beforeend', `<g style="pointer-events:none;"><text id="svg_num" text-anchor="middle" font-family="Impact"></text><text id="svg_name" text-anchor="middle" font-family="Impact"></text></g>`); }
+            if(!svg.getElementById('svg_num')) svg.insertAdjacentHTML('beforeend', `<g style="pointer-events:none;"><text id="svg_num" text-anchor="middle" font-family="Impact"></text><text id="svg_name" text-anchor="middle" font-family="Impact"></text></g>`);
             const n = svg.getElementById('svg_num'), m = svg.getElementById('svg_name');
-            n.textContent = document.getElementById('v_num').value || (isAdminActive ? "" : "10");
+            n.textContent = document.getElementById('v_num').value || "10";
             n.setAttribute('fill', curColors.nc.c); n.setAttribute('font-size', document.getElementById('i_ns').value); n.setAttribute('x', document.getElementById('i_nx').value); n.setAttribute('y', document.getElementById('i_ny').value);
-            
-            // ★名前の改善：自然な幅の時はそのまま、超えた時だけ縮める
-            m.textContent = (document.getElementById('v_name').value || (isAdminActive ? "" : "TASTO")).toUpperCase();
-            m.setAttribute('fill', curColors.nc.c); 
-            m.setAttribute('font-size', document.getElementById('i_ms').value); 
-            m.setAttribute('x', document.getElementById('i_mx').value); 
-            m.setAttribute('y', document.getElementById('i_my').value);
-            
-            const mw = document.getElementById('i_mw').value;
-            // 一旦 textLength を解除して自然な長さを測る
-            m.removeAttribute('textLength');
-            m.removeAttribute('lengthAdjust');
-            // 自然な長さが設定幅を超えていたら textLength を適用
-            if (m.getComputedTextLength() > mw) {
-                m.setAttribute('textLength', mw);
-                m.setAttribute('lengthAdjust', 'spacingAndGlyphs');
-            }
+            m.textContent = (document.getElementById('v_name').value || "TASTO").toUpperCase();
+            m.setAttribute('fill', curColors.nc.c); m.setAttribute('font-size', document.getElementById('i_ms').value); m.setAttribute('x', document.getElementById('i_mx').value); m.setAttribute('y', document.getElementById('i_my').value);
+            const mw = document.getElementById('i_mw').value; m.removeAttribute('textLength'); if(m.getComputedTextLength() > mw) { m.setAttribute('textLength', mw); m.setAttribute('lengthAdjust', 'spacingAndGlyphs'); }
         }
 
         function saveSettings() {
@@ -227,9 +205,11 @@
 
         function saveOrder() {
             const n = document.getElementById('design_select').value, i = document.getElementById('collar_select').value, v = designLibrary[n].variants[i];
-            const data = { designId: v.id, designName: n, sportType: currentSport, collarType: v.collar, number: document.getElementById('v_num').value, nameText: document.getElementById('v_name').value, colorBody1: curColors.c0.n, colorBody2: curColors.c1.n, colorBody3: curColors.c4.n, colorSleeve: curColors.c3.n, colorCollar: curColors.c5.n, colorNum: curColors.nc.n };
+            const data = { itemType: currentType, designId: v.id, designName: n, sportType: currentSport, collarType: v.collar, number: document.getElementById('v_num').value, nameText: document.getElementById('v_name').value, colorBody1: curColors.c0.n, colorBody2: curColors.c1.n, colorBody3: curColors.c4.n, colorSleeve: curColors.c3.n, colorCollar: curColors.c5.n, colorNum: curColors.nc.n };
             google.script.run.withSuccessHandler(() => alert("送信完了")).saveOrder(data);
         }
+        function goBackToStart() { document.getElementById('catalog-screen').style.display='none'; document.getElementById('start-screen').style.display='flex'; }
+        function goBackToCatalog() { document.getElementById('main-app').style.display='none'; document.getElementById('catalog-screen').style.display='flex'; }
     </script>
 </body>
 </html>

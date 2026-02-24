@@ -17,7 +17,6 @@ function getDesignLibraryBySport(s) {
   return lib;
 }
 
-// 競技設定の保存（名前の幅 m_w を含む）
 function saveSportSettings(d) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName('システム設定') || ss.insertSheet('システム設定');
@@ -30,19 +29,16 @@ function saveSportSettings(d) {
   return "設定を保存しました";
 }
 
-// カラーマスターの取得・保存
 function getColorPalette() {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('カラー定義');
-  if (!sheet) return null; // 初期値を使用
-  var data = sheet.getDataRange().getValues();
-  return data.slice(1).map(function(r){ return {n:r[0], c:r[1]}; });
+  if (!sheet) return null;
+  return sheet.getDataRange().getValues().slice(1).map(function(r){ return {n:r[0], c:r[1]}; });
 }
 
 function saveColorPalette(palette) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName('カラー定義') || ss.insertSheet('カラー定義');
-  sheet.clear();
-  sheet.appendRow(['色名', 'カラーコード']);
+  sheet.clear(); sheet.appendRow(['色名', 'カラーコード']);
   palette.forEach(function(p){ sheet.appendRow([p.n, p.c]); });
   return "カラーパレットを更新しました";
 }
@@ -55,9 +51,10 @@ function getSportSettings() {
   return s;
 }
 
+// 注文保存（「種別」列を追加）
 function saveOrder(d) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('注文一覧') || SpreadsheetApp.getActiveSpreadsheet().insertSheet('注文一覧');
-  if (sheet.getLastRow() === 0) sheet.appendRow(["日時", "ID", "デザイン", "競技", "襟", "番号", "名前", "身頃1", "身頃2", "身頃3", "袖", "襟色", "番色", "名色"]);
-  sheet.appendRow([new Date(), d.designId, d.designName, d.sportType, d.collarType, d.number, d.nameText, d.colorBody1, d.colorBody2, d.colorBody3, d.colorSleeve, d.colorCollar, d.colorNum, d.colorName]);
+  if (sheet.getLastRow() === 0) sheet.appendRow(["日時", "種別", "ID", "デザイン", "競技", "襟", "番号", "名前", "身頃1", "身頃2", "身頃3", "袖", "襟色", "番色", "名色"]);
+  sheet.appendRow([new Date(), d.itemType, d.designId, d.designName, d.sportType, d.collarType, d.number, d.nameText, d.colorBody1, d.colorBody2, d.colorBody3, d.colorSleeve, d.colorCollar, d.colorNum, d.colorName]);
   return "SUCCESS";
 }

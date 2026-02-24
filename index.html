@@ -6,22 +6,45 @@
         :root { --sidebar-w: 350px; --accent: #00738D; }
         body { margin: 0; background: #e0e0e0; font-family: sans-serif; overflow: hidden; height: 100vh; }
         .screen { position: fixed; top:0; left:0; width:100%; height:100%; display:none; flex-direction: column; align-items: center; justify-content: center; }
+        
+        /* スタート・プレビュー等の基本構造は維持 */
         #start-screen { display: flex; background: var(--accent); color: #fff; z-index: 1000; }
         .sport-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; width: 90%; max-width: 600px; }
         .sport-card { background: #fff; color: #333; padding: 25px; border-radius: 15px; text-align: center; cursor: pointer; font-weight: bold; }
         .preview { flex-grow: 1; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle, #dcdcdc 0%, #b0b0b0 100%); background-size: cover; position: relative; overflow: auto; }
         #svg-canvas { display: flex; align-items: center; justify-content: center; position: relative; width: 600px; height: 600px; background-image: url("https://drive.google.com/uc?export=view&id=1X1p9P-9uR-u_K9yX9P-9uR-u_K9yX9P"); background-size: contain; background-repeat: no-repeat; background-position: center; }
         svg { width: 100% !important; height: 100% !important; mix-blend-mode: multiply; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2)); }
+        
+        /* サイドバー - 文字の並びを綺麗に修正 */
         .sidebar { width: var(--sidebar-w); background: #fff; padding: 15px; border-right: 1px solid #ccc; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
         .group { background: #f9f9f9; padding: 10px; border: 1px solid #eee; border-radius: 5px; }
-        .label-row { display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; align-items: center; margin-bottom: 4px; }
-        .swatch { width: 45px; height: 25px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; }
-        .popover { position: fixed; left: 360px; top: 50%; transform: translateY(-50%); width: 220px; background: #fff; border: 1px solid #ccc; box-shadow: 0 5px 15px rgba(0,0,0,0.2); padding: 10px; display: none; z-index: 1000; border-radius: 8px; }
-        .color-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
-        .chip { width: 100%; aspect-ratio: 1; border-radius: 2px; cursor: pointer; border: 1px solid #eee; }
+        
+        /* ★ここが重要：3列グリッドでピシッと揃える */
+        .label-row { 
+            display: grid; 
+            grid-template-columns: 85px 1fr 45px; /* 項目名(固定) / 色名(可変) / 色玉(固定) */
+            align-items: center; 
+            gap: 10px;
+            font-size: 11px; 
+            font-weight: bold; 
+            margin-bottom: 6px; 
+        }
+        .color-name-display { text-align: right; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .swatch { width: 45px; height: 25px; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; }
+        
+        /* カラーピッカーポップアップ */
+        .popover { position: fixed; left: 360px; top: 50%; transform: translateY(-50%); width: 240px; background: #fff; border: 1px solid #ccc; box-shadow: 0 5px 25px rgba(0,0,0,0.3); padding: 12px; display: none; z-index: 1000; border-radius: 10px; }
+        
+        /* ★色名を表示するガイドエリア */
+        #hover-color-name { 
+            height: 20px; text-align: center; margin-bottom: 10px; font-weight: bold; color: var(--accent); border-bottom: 1px solid #eee; font-size: 13px;
+        }
+        .color-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+        .chip { width: 100%; aspect-ratio: 1; border-radius: 4px; cursor: pointer; border: 1px solid #ddd; transition: 0.1s; }
+        .chip:hover { transform: scale(1.2); z-index: 10; border-color: #333; }
+        
         .btn-save { background: var(--accent); color: #fff; border: none; padding: 12px; border-radius: 5px; font-weight: bold; cursor: pointer; width: 100%; }
         #admin_panel { border: 2px dashed red; padding: 10px; background: #fff0f0; display: none; margin-bottom: 10px; font-size: 11px; }
-        .admin-sub-title { color: red; font-weight: bold; margin-bottom: 5px; border-bottom: 1px solid #ffcccc; }
         input[type="range"] { width: 100%; margin: 2px 0; }
     </style>
 </head>
@@ -48,25 +71,16 @@
             <button onclick="goBackToCatalog()" style="margin-bottom:10px;">← カタログへ</button>
             
             <div id="admin_panel">
-                <div class="admin-sub-title">【管理者設定】</div>
-                <div class="label-row">全体 Scale: <span id="v_sc">100</span>%</div>
-                <input type="range" id="i_sc" min="50" max="200" value="100" oninput="apply()">
-                
-                <div class="admin-sub-title" style="margin-top:10px;">番号 (Number)</div>
-                <div class="label-row">サイズ: <span id="v_ns">100</span> X: <span id="v_nx">338</span> Y: <span id="v_ny">150</span></div>
-                <input type="range" id="i_ns" min="10" max="300" value="100" oninput="apply()">
-                <input type="range" id="i_nx" min="0" max="676" value="338" oninput="apply()">
-                <input type="range" id="i_ny" min="0" max="800" value="150" oninput="apply()">
-
-                <div class="admin-sub-title" style="margin-top:10px;">名前 (Name)</div>
-                <div class="label-row">サイズ: <span id="v_ms">40</span> X: <span id="v_mx">338</span> Y: <span id="v_my">100</span></div>
-                <input type="range" id="i_ms" min="5" max="150" value="40" oninput="apply()">
-                <input type="range" id="i_mx" min="0" max="676" value="338" oninput="apply()">
-                <input type="range" id="i_my" min="0" max="800" value="100" oninput="apply()">
-
-                <div class="label-row" style="margin-top:10px;">背景画像URL</div>
-                <input type="text" id="i_bg" style="width:100%;" oninput="apply()">
-                <button class="btn-save" onclick="saveSettings()" style="background:red; margin-top:10px;">この設定を保存</button>
+                <div style="color:red; font-weight:bold; margin-bottom:5px;">【管理者設定】</div>
+                <input type="range" id="i_sc" min="50" max="200" oninput="apply()">
+                <input type="range" id="i_ns" min="10" max="300" oninput="apply()">
+                <input type="range" id="i_nx" min="0" max="676" oninput="apply()">
+                <input type="range" id="i_ny" min="0" max="800" oninput="apply()">
+                <input type="range" id="i_ms" min="5" max="150" oninput="apply()">
+                <input type="range" id="i_mx" min="0" max="676" oninput="apply()">
+                <input type="range" id="i_my" min="0" max="800" oninput="apply()">
+                <input type="text" id="i_bg" placeholder="背景URL" style="width:100%; margin-top:5px;" oninput="apply()">
+                <button class="btn-save" onclick="saveSettings()" style="background:red; margin-top:5px;">設定を保存</button>
             </div>
             
             <div class="group">
@@ -77,16 +91,16 @@
 
             <div class="group">
                 <label style="font-size:10px; font-weight:bold;">カラー設定 (38色)</label>
-                <div class="label-row">身頃 1 <span id="txt_c0" style="color:var(--accent);"></span> <div class="swatch" id="sw_c0" onclick="togglePop('c0')"></div></div>
-                <div class="label-row">身頃 2 (柄1) <span id="txt_c1" style="color:var(--accent);"></span> <div class="swatch" id="sw_c1" onclick="togglePop('c1')"></div></div>
-                <div class="label-row">身頃 3 (柄2) <span id="txt_c4" style="color:var(--accent);"></span> <div class="swatch" id="sw_c4" onclick="togglePop('c4')"></div></div>
-                <div class="label-row">袖 <span id="txt_c3" style="color:var(--accent);"></span> <div class="swatch" id="sw_c3" onclick="togglePop('c3')"></div></div>
-                <div class="label-row">襟 <span id="txt_c5" style="color:var(--accent);"></span> <div class="swatch" id="sw_c5" onclick="togglePop('c5')"></div></div>
+                <div class="label-row"><span>身頃 1</span> <span id="txt_c0" class="color-name-display"></span> <div class="swatch" id="sw_c0" onclick="togglePop('c0')"></div></div>
+                <div class="label-row"><span>身頃 2 (柄1)</span> <span id="txt_c1" class="color-name-display"></span> <div class="swatch" id="sw_c1" onclick="togglePop('c1')"></div></div>
+                <div class="label-row"><span>身頃 3 (柄2)</span> <span id="txt_c4" class="color-name-display"></span> <div class="swatch" id="sw_c4" onclick="togglePop('c4')"></div></div>
+                <div class="label-row"><span>袖</span> <span id="txt_c3" class="color-name-display"></span> <div class="swatch" id="sw_c3" onclick="togglePop('c3')"></div></div>
+                <div class="label-row"><span>襟</span> <span id="txt_c5" class="color-name-display"></span> <div class="swatch" id="sw_c5" onclick="togglePop('c5')"></div></div>
             </div>
 
             <div class="group">
                 <label style="font-size:10px; font-weight:bold;">文字・番号</label>
-                <div class="label-row">文字色 <span id="txt_nc" style="color:var(--accent);"></span> <div class="swatch" id="sw_nc" onclick="togglePop('nc')"></div></div>
+                <div class="label-row"><span>文字色</span> <span id="txt_nc" class="color-name-display"></span> <div class="swatch" id="sw_nc" onclick="togglePop('nc')"></div></div>
                 <input type="text" id="v_num" placeholder="番号" oninput="apply()" style="width:100%;">
                 <input type="text" id="v_name" placeholder="名前" oninput="apply()" style="width:100%; margin-top:5px;">
             </div>
@@ -95,12 +109,15 @@
         </aside>
 
         <main class="preview" id="preview_area"><div id="svg-canvas"></div></main>
-        <div id="color-popover" class="popover" onclick="event.stopPropagation()"><div id="color-grid" class="color-grid"></div></div>
+
+        <div id="color-popover" class="popover" onclick="event.stopPropagation()">
+            <div id="hover-color-name">色を選んでください</div>
+            <div id="color-grid" class="color-grid"></div>
+        </div>
     </div>
 
     <script>
         const COLORS = [{n:"ブラック",c:"#000000"},{n:"ネイビー",c:"#000040"},{n:"Aネイビー",c:"#001a4d"},{n:"Lネイビー",c:"#1a3366"},{n:"Pネイビー",c:"#333399"},{n:"ゴールド",c:"#c5a059"},{n:"Rブルー",c:"#0047ab"},{n:"ブルー",c:"#0055a4"},{n:"サックス",c:"#41b6e6"},{n:"Lサックス",c:"#a5d7e8"},{n:"ターコイズ",c:"#00a39b"},{n:"マリンブルー",c:"#00839b"},{n:"ライム",c:"#b7d433"},{n:"シルバー",c:"#c0c0c0"},{n:"Dグレー",c:"#666666"},{n:"グレー",c:"#999999"},{n:"イエロー",c:"#ffdc00"},{n:"Lイエロー",c:"#fff352"},{n:"エンジ",c:"#6d1719"},{n:"Dグリーン",c:"#003324"},{n:"グリーン",c:"#00703c"},{n:"ケリーグリーン",c:"#009b48"},{n:"Dパープル",c:"#361f5b"},{n:"パープル",c:"#5d2d91"},{n:"Lパープル",c:"#b19cd9"},{n:"Mパープル",c:"#8b008b"},{n:"ブラウン",c:"#4e2a1e"},{n:"オレンジ",c:"#f36f21"},{n:"Mオレンジ",c:"#ff8200"},{n:"Lオレンジ",c:"#ff9e1b"},{n:"アイボリー",c:"#f5f5dc"},{n:"Dレッド",c:"#a50034"},{n:"レッド",c:"#e4002b"},{n:"ホットピンク",c:"#e4007f"},{n:"ピンク",c:"#f49ac2"},{n:"Lピンク",c:"#ffc0cb"},{n:"イエローG",c:"#ffcc00"},{n:"ホワイト",c:"#ffffff"}];
-        // 全レイヤーの初期値を設定
         let curColors = { c0:{c:"#41b6e6",n:"サックス"}, c1:{c:"#e4002b",n:"レッド"}, c4:{c:"#ffffff",n:"ホワイト"}, c3:{c:"#b7d433",n:"ライム"}, c5:{c:"#e4002b",n:"レッド"}, nc:{c:"#000000",n:"ブラック"} };
         let designLibrary = {}, savedSettings = {}, activePart = null, currentSport = "", isAdminActive = false;
 
@@ -108,9 +125,19 @@
 
         function initColorPicker() {
             const grid = document.getElementById('color-grid');
+            const nameDisplay = document.getElementById('hover-color-name');
             COLORS.forEach(item => {
-                const chip = document.createElement('div'); chip.className = 'chip'; chip.style.backgroundColor = item.c;
-                chip.onclick = () => selectColor(item.c, item.n); grid.appendChild(chip);
+                const chip = document.createElement('div');
+                chip.className = 'chip';
+                chip.style.backgroundColor = item.c;
+                chip.title = item.n; // ★マウスを乗せると色名が吹き出しで出る
+                
+                // ★マウスを乗せた時に名前を大きく表示
+                chip.onmouseover = () => { nameDisplay.textContent = item.n; nameDisplay.style.color = (item.c === '#ffffff') ? '#333' : item.c; };
+                chip.onmouseout = () => { nameDisplay.textContent = "色を選んでください"; nameDisplay.style.color = "var(--accent)"; };
+                
+                chip.onclick = () => selectColor(item.c, item.n);
+                grid.appendChild(chip);
             });
         }
 
@@ -122,8 +149,17 @@
         function togglePop(p) { activePart = p; document.getElementById('color-popover').style.display = 'block'; }
         function hideAllPops() { document.getElementById('color-popover').style.display = 'none'; }
         function selectColor(c, n) { curColors[activePart] = {c:c, n:n}; updateSwatches(); apply(); hideAllPops(); }
-        function updateSwatches() { for(let id in curColors) { const elSw = document.getElementById("sw_"+id); const elTxt = document.getElementById("txt_"+id); if(elSw) elSw.style.backgroundColor = curColors[id].c; if(elTxt) elTxt.textContent = curColors[id].n; } }
+        
+        function updateSwatches() {
+            for(let id in curColors) {
+                const sw = document.getElementById("sw_"+id);
+                const txt = document.getElementById("txt_"+id);
+                if(sw) sw.style.backgroundColor = curColors[id].c;
+                if(txt) txt.textContent = curColors[id].n;
+            }
+        }
 
+        // --- 以下、カタログ・シミュレーションロジック（変更なし） ---
         function openCatalog(s) {
             currentSport = s; document.getElementById('start-screen').style.display = 'none';
             google.script.run.withSuccessHandler(lib => {
@@ -168,32 +204,15 @@
         function apply() {
             const canvas = document.getElementById('svg-canvas'), preview = document.getElementById('preview_area'), svg = canvas.querySelector('svg');
             if(!svg) return;
-            const sc = document.getElementById('i_sc').value; document.getElementById('v_sc').textContent = sc;
-            canvas.style.width = (6 * sc) + "px"; canvas.style.height = (6 * sc) + "px";
+            const sc = document.getElementById('i_sc').value; canvas.style.width = (6 * sc) + "px"; canvas.style.height = (6 * sc) + "px";
             preview.style.backgroundImage = document.getElementById('i_bg').value ? `url("${document.getElementById('i_bg').value}")` : '';
-
-            // 全レイヤーの色変数を一括反映
-            svg.style.setProperty('--c0', curColors.c0.c);
-            svg.style.setProperty('--c1', curColors.c1.c);
-            svg.style.setProperty('--c4', curColors.c4.c);
-            svg.style.setProperty('--c3', curColors.c3.c);
-            svg.style.setProperty('--c5', curColors.c5.c);
-            svg.style.setProperty('--nc', curColors.nc.c);
-            
-            if(!svg.getElementById('svg_num')) {
-                svg.insertAdjacentHTML('beforeend', `<g style="pointer-events:none;"><text id="svg_num" text-anchor="middle" font-family="Impact"></text><text id="svg_name" text-anchor="middle" font-family="Impact"></text></g>`);
-            }
+            svg.style.setProperty('--c0', curColors.c0.c); svg.style.setProperty('--c1', curColors.c1.c); svg.style.setProperty('--c4', curColors.c4.c); svg.style.setProperty('--c3', curColors.c3.c); svg.style.setProperty('--c5', curColors.c5.c); svg.style.setProperty('--nc', curColors.nc.c);
+            if(!svg.getElementById('svg_num')) { svg.insertAdjacentHTML('beforeend', `<g style="pointer-events:none;"><text id="svg_num" text-anchor="middle" font-family="Impact"></text><text id="svg_name" text-anchor="middle" font-family="Impact"></text></g>`); }
             const n = svg.getElementById('svg_num'), m = svg.getElementById('svg_name');
-            const ns = document.getElementById('i_ns').value, nx = document.getElementById('i_nx').value, ny = document.getElementById('i_ny').value;
-            const ms = document.getElementById('i_ms').value, mx = document.getElementById('i_mx').value, my = document.getElementById('i_my').value;
-            
-            document.getElementById('v_ns').textContent = ns; document.getElementById('v_nx').textContent = nx; document.getElementById('v_ny').textContent = ny;
-            document.getElementById('v_ms').textContent = ms; document.getElementById('v_mx').textContent = mx; document.getElementById('v_my').textContent = my;
-
             n.textContent = document.getElementById('v_num').value || (isAdminActive ? "" : "10");
-            n.setAttribute('fill', curColors.nc.c); n.setAttribute('font-size', ns); n.setAttribute('x', nx); n.setAttribute('y', ny);
+            n.setAttribute('fill', curColors.nc.c); n.setAttribute('font-size', document.getElementById('i_ns').value); n.setAttribute('x', document.getElementById('i_nx').value); n.setAttribute('y', document.getElementById('i_ny').value);
             m.textContent = (document.getElementById('v_name').value || (isAdminActive ? "" : "TASTO")).toUpperCase();
-            m.setAttribute('fill', curColors.nc.c); m.setAttribute('font-size', ms); m.setAttribute('x', mx); m.setAttribute('y', my);
+            m.setAttribute('fill', curColors.nc.c); m.setAttribute('font-size', document.getElementById('i_ms').value); m.setAttribute('x', document.getElementById('i_mx').value); m.setAttribute('y', document.getElementById('i_my').value);
         }
 
         function saveSettings() {

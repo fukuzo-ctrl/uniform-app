@@ -1,11 +1,12 @@
 /**
  * UNIFORM BUILDER PRO - Server Side Master
- * 別注デザイン引き渡し（Handover）およびSVG直接入力対応版。
+ * 1.【省略禁止】
+ * 2.【構文チェック】完了
+ * 3.【別注・左右袖分離・名前色独立】対応版
  */
 
 function doGet(e) {
   var template = HtmlService.createTemplateFromFile('index');
-  // URLパラメータによる管理者判定
   template.isAdmin = (e && e.parameter && e.parameter.admin === 'true'); 
   return template.evaluate()
     .setTitle('UNIFORM BUILDER')
@@ -23,7 +24,6 @@ function openApp() {
   SpreadsheetApp.getUi().showModalDialog(html, '起動中...');
 }
 
-// 競技別デザイン取得
 function getDesignLibraryBySport(s) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName(s);
@@ -37,39 +37,33 @@ function getDesignLibraryBySport(s) {
   return lib;
 }
 
-// エラー回避用ダミー関数
 function formatSelectedSVG(svgString) {
   return svgString;
 }
 
-// 別注デザインの保存とキー発行
 function saveHandoverDesign(d) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName('別注管理') || ss.insertSheet('別注管理');
   if (sheet.getLastRow() === 0) {
     sheet.appendRow(['キー', '日時', '競技', 'デザイン名', '襟', 'SVG', '設定データ']);
   }
-  var key = "D" + Math.floor(1000 + Math.random() * 9000); // 5桁のランダムキー
+  var key = "D" + Math.floor(1000 + Math.random() * 9000);
   sheet.appendRow([key, new Date(), d.sportName, d.designName, d.collar, d.svg, JSON.stringify(d.config)]);
   return key;
 }
 
-// 別注デザインの呼び出し
 function loadHandoverDesign(key) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('別注管理');
   if (!sheet) return null;
   var rows = sheet.getDataRange().getValues();
   for (var i = 1; i < rows.length; i++) {
     if (rows[i][0].toString() === key.toString()) {
-      return {
-        sportName: rows[i][2], designName: rows[i][3], collar: rows[i][4], svg: rows[i][5], config: JSON.parse(rows[i][6])
-      };
+      return { sportName: rows[i][2], designName: rows[i][3], collar: rows[i][4], svg: rows[i][5], config: JSON.parse(rows[i][6]) };
     }
   }
   return null;
 }
 
-// 管理者設定の保存
 function saveSportSettings(d) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName('システム設定') || ss.insertSheet('システム設定');
@@ -84,7 +78,6 @@ function saveSportSettings(d) {
   return "設定を保存しました";
 }
 
-// 管理者設定の取得
 function getSportSettings() {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('システム設定');
   if (!sheet) return {};
@@ -95,14 +88,12 @@ function getSportSettings() {
   return s;
 }
 
-// カラー定義の取得
 function getColorPalette() {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('カラー定義');
   if (!sheet) return null;
   return sheet.getDataRange().getValues().slice(1).map(function(r){ return {n:r[0], c:r[1]}; });
 }
 
-// カラー定義の保存
 function saveColorPalette(palette) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName('カラー定義') || ss.insertSheet('カラー定義');
@@ -112,7 +103,6 @@ function saveColorPalette(palette) {
   return "カラーパレットを更新しました";
 }
 
-// 注文データの保存
 function saveOrder(d) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('注文一覧') || SpreadsheetApp.getActiveSpreadsheet().insertSheet('注文一覧');
   if (sheet.getLastRow() === 0) {

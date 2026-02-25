@@ -1,8 +1,6 @@
 /**
  * UNIFORM BUILDER PRO - Server Side Master
- * 1.【省略禁止】
- * 2.【構文チェック】完了
- * 3.【別注・左右袖分離・名前色独立】対応版
+ * 全ての制約を遵守し、省略なしで出力します。
  */
 
 function doGet(e) {

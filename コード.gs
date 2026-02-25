@@ -1,10 +1,11 @@
 /**
  * UNIFORM BUILDER PRO - Server Side Master
- * 別注デザイン引き渡し（Handover）機能を統合。
+ * 別注デザイン引き渡し（Handover）およびSVG直接入力対応版。
  */
 
 function doGet(e) {
   var template = HtmlService.createTemplateFromFile('index');
+  // URLパラメータによる管理者判定
   template.isAdmin = (e && e.parameter && e.parameter.admin === 'true'); 
   return template.evaluate()
     .setTitle('UNIFORM BUILDER')
@@ -22,7 +23,7 @@ function openApp() {
   SpreadsheetApp.getUi().showModalDialog(html, '起動中...');
 }
 
-// デザインカタログ取得
+// 競技別デザイン取得
 function getDesignLibraryBySport(s) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName(s);
@@ -34,6 +35,11 @@ function getDesignLibraryBySport(s) {
     lib[data[i][1]].variants.push({ id: data[i][0], collar: data[i][2], svg: data[i][3] });
   }
   return lib;
+}
+
+// エラー回避用ダミー関数
+function formatSelectedSVG(svgString) {
+  return svgString;
 }
 
 // 別注デザインの保存とキー発行
@@ -63,42 +69,55 @@ function loadHandoverDesign(key) {
   return null;
 }
 
+// 管理者設定の保存
 function saveSportSettings(d) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName('システム設定') || ss.insertSheet('システム設定');
-  if (sheet.getLastRow() === 0) { sheet.appendRow(['競技', 'Scale', 'bgUrl', 'n_size', 'n_x', 'n_y', 'm_size', 'm_x', 'm_y', 'm_w']); }
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(['競技', 'Scale', 'bgUrl', 'n_size', 'n_x', 'n_y', 'm_size', 'm_x', 'm_y', 'm_w']);
+  }
   var rows = sheet.getDataRange().getValues(), f = -1;
   for (var i = 1; i < rows.length; i++) { if (rows[i][0] === d.sportName) { f = i + 1; break; } }
   var row = [d.sportName, d.scale, d.bgUrl, d.n_size, d.n_x, d.n_y, d.m_size, d.m_x, d.m_y, d.m_w];
-  if (f !== -1) sheet.getRange(f, 1, 1, 10).setValues([row]); else sheet.appendRow(row);
+  if (f !== -1) sheet.getRange(f, 1, 1, 10).setValues([row]);
+  else sheet.appendRow(row);
   return "設定を保存しました";
 }
 
+// 管理者設定の取得
 function getSportSettings() {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('システム設定');
   if (!sheet) return {};
   var data = sheet.getDataRange().getValues(), s = {};
-  for (var i = 1; i < data.length; i++) { s[data[i][0]] = { scale:data[i][1], bgUrl:data[i][2], n_size:data[i][3], n_x:data[i][4], n_y:data[i][5], m_size:data[i][6], m_x:data[i][7], m_y:data[i][8], m_w:data[i][9] }; }
+  for (var i = 1; i < data.length; i++) {
+    s[data[i][0]] = { scale:data[i][1], bgUrl:data[i][2], n_size:data[i][3], n_x:data[i][4], n_y:data[i][5], m_size:data[i][6], m_x:data[i][7], m_y:data[i][8], m_w:data[i][9] };
+  }
   return s;
 }
 
+// カラー定義の取得
 function getColorPalette() {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('カラー定義');
   if (!sheet) return null;
   return sheet.getDataRange().getValues().slice(1).map(function(r){ return {n:r[0], c:r[1]}; });
 }
 
+// カラー定義の保存
 function saveColorPalette(palette) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName('カラー定義') || ss.insertSheet('カラー定義');
-  sheet.clear(); sheet.appendRow(['色名', 'カラーコード']);
+  sheet.clear(); 
+  sheet.appendRow(['色名', 'カラーコード']);
   palette.forEach(function(p){ sheet.appendRow([p.n, p.c]); });
   return "カラーパレットを更新しました";
 }
 
+// 注文データの保存
 function saveOrder(d) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('注文一覧') || SpreadsheetApp.getActiveSpreadsheet().insertSheet('注文一覧');
-  if (sheet.getLastRow() === 0) { sheet.appendRow(["日時", "種別", "ID", "デザイン", "競技", "襟", "番号", "名前", "身頃1", "身頃2", "身頃3", "右袖", "左袖", "襟色", "番号色", "名前色"]); }
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(["日時", "種別", "ID", "デザイン", "競技", "襟", "番号", "名前", "身頃1", "身頃2", "身頃3", "右袖", "左袖", "襟色", "番号色", "名前色"]);
+  }
   sheet.appendRow([new Date(), d.itemType, d.designId, d.designName, d.sportType, d.collarType, d.number, d.nameText, d.colorBody1, d.colorBody2, d.colorBody3, d.colorSleeveR, d.colorSleeveL, d.colorCollar, d.colorNum, d.colorName]);
   return "SUCCESS";
 }

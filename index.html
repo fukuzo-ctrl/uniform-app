@@ -12,12 +12,12 @@
         .sport-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; width: 90%; max-width: 600px; }
         .sport-card { background: #fff; color: #333; padding: 25px; border-radius: 15px; text-align: center; cursor: pointer; font-weight: bold; font-size: 18px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
 
-        /* 2. プレビューエリア（背景：白） */
+        /* 2. プレビューエリア（背景：白、影の抑制） */
         .preview { flex-grow: 1; display: flex; align-items: center; justify-content: center; background: #ffffff; position: relative; overflow: auto; }
         #svg-canvas { display: flex; align-items: center; justify-content: center; position: relative; width: 600px; height: 600px; background-image: url("https://drive.google.com/uc?export=view&id=1X1p9P-9uR-u_K9yX9P-9uR-u_K9yX9P"); background-size: contain; background-repeat: no-repeat; background-position: center; }
         svg { width: 100% !important; height: 100% !important; mix-blend-mode: multiply; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.1)); }
         
-        /* 3. サイドバー */
+        /* 3. サイドバー（デザイン・整列維持） */
         .sidebar { width: var(--sidebar-w); background: #fff; padding: 15px; border-right: 1px solid #ccc; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; }
         .group { background: #f9f9f9; padding: 10px; border: 1px solid #eee; border-radius: 5px; }
         
@@ -128,7 +128,6 @@
     <script>
         // グローバル変数
         let COLORS = [{n:"ブラック",c:"#000000"},{n:"ネイビー",c:"#000040"},{n:"サックス",c:"#41b6e6"},{n:"レッド",c:"#e4002b"},{n:"ライム",c:"#b7d433"},{n:"ホワイト",c:"#ffffff"}];
-        // c6 (左袖) を追加
         let curColors = { 
             c0:{c:"#41b6e6",n:"サックス"}, c1:{c:"#e4002b",n:"レッド"}, c4:{c:"#ffffff",n:"ホワイト"}, 
             c3:{c:"#b7d433",n:"ライム"}, c6:{c:"#b7d433",n:"ライム"}, c5:{c:"#e4002b",n:"レッド"}, 
@@ -137,8 +136,14 @@
         let designLibrary = {}, savedSettings = {}, activePart = null, currentSport = "", currentType = "シャツのみ", isAdminActive = false;
 
         window.onload = () => {
-            google.script.run.withSuccessHandler(p => { if(p) COLORS = p; initColorPicker(); updateSwatches(); }).getColorPalette();
-            google.script.run.withSuccessHandler(s => { savedSettings = s; }).getSportSettings();
+            google.script.run.withSuccessHandler(p => { 
+                if(p) COLORS = p; 
+                initColorPicker(); 
+                updateSwatches(); 
+            }).getColorPalette();
+            google.script.run.withSuccessHandler(s => { 
+                savedSettings = s; 
+            }).getSportSettings();
         };
 
         function initColorPicker() {
@@ -216,7 +221,7 @@
                 }
                 document.getElementById('start-screen').style.display = 'none';
                 document.getElementById('catalog-screen').style.display = 'flex';
-            }).getDesignLibraryBySport(s);
+            }).withFailureHandler(err => alert(err)).getDesignLibraryBySport(s);
         }
 
         function startSim(name) {
@@ -263,7 +268,7 @@
             canvas.style.width = (6 * sc) + "px"; canvas.style.height = (6 * sc) + "px";
             document.getElementById('preview_area').style.backgroundImage = document.getElementById('i_bg').value ? `url("${document.getElementById('i_bg').value}")` : '';
             
-            // カラー反映（★c6を追加）
+            // ★右袖(--c3)と左袖(--c6)を独立して適用
             svg.style.setProperty('--c0', curColors.c0.c); svg.style.setProperty('--c1', curColors.c1.c); 
             svg.style.setProperty('--c4', curColors.c4.c); 
             svg.style.setProperty('--c3', curColors.c3.c); // 右袖

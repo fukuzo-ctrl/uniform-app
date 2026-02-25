@@ -1,10 +1,11 @@
 /**
  * UNIFORM BUILDER PRO - Server Side Master
- * 左右の袖の色（c3, c6）を個別に保存できるよう拡張。
+ * 左右の袖の色（c3:右, c6:左）および名前の色（mc）を完全に分離した最終版です。
  */
 
 function doGet(e) {
   var template = HtmlService.createTemplateFromFile('index');
+  // URLパラメータによる管理者判定
   template.isAdmin = (e && e.parameter && e.parameter.admin === 'true'); 
   return template.evaluate()
     .setTitle('UNIFORM BUILDER')
@@ -26,7 +27,7 @@ function openApp() {
 function getDesignLibraryBySport(s) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName(s);
-  if (!sheet) throw new Error('シート「' + s + '」が見つかりません。');
+  if (!sheet) throw new Error('シート「' + s + '」が見つかりません。スプレッドシートのシート名を確認してください。');
   var data = sheet.getDataRange().getValues(), lib = {};
   for (var i = 1; i < data.length; i++) {
     if (!data[i][1] || !data[i][3]) continue;
@@ -36,6 +37,7 @@ function getDesignLibraryBySport(s) {
   return lib;
 }
 
+// SVGのフォーマット関数（エラー回避のため定義）
 function formatSelectedSVG(svgString) {
   return svgString;
 }
@@ -83,7 +85,7 @@ function saveColorPalette(palette) {
   return "カラーパレットを更新しました";
 }
 
-// 注文データの保存（右袖、左袖、名前色を分離）
+// 注文データの保存（右袖、左袖、名前色を確実に分離して保存）
 function saveOrder(d) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('注文一覧') || SpreadsheetApp.getActiveSpreadsheet().insertSheet('注文一覧');
   if (sheet.getLastRow() === 0) {
